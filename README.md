@@ -7,9 +7,9 @@ This repository contains the data and scripts required to reproduce the results 
 
 ```
 .
-├── data/              # Raw and processed dataset files
-├── scripts/           # Analysis and processing scripts with configuration files
-└── images/            # Flow diagrams used in this REAME
+├── Data/              # Raw and processed dataset files
+├── Scripts/           # Analysis and processing scripts with configuration files
+└── Images/            # Flow diagrams used in this REAME
 ```
 
 ## Requirements
