@@ -1,15 +1,14 @@
 # Prolyl Isomerisation Benchmark
 
-This repository contains the data and scripts required to reproduce the results from my MSc thesis _On the Computational Modelling of Prolyl–Peptide_ cis–trans _Isomerisation: Benchmarking DFT Approaches with N–Acetylproline Methylamide_
-
+This repository contains the data and scripts required to reproduce the results from my MSc thesis _On the Computational Modelling of Prolyl–Peptide_ cis–trans _Isomerisation: Benchmarking DFT App[...]_
 
 ## Repository Structure
 
 ```
 .
 ├── Data/              # Raw and processed dataset files
-├── Scripts/           # Analysis and processing scripts with configuration files
-└── Images/            # Flow diagrams used in this REAME
+├── Images/            # Flow diagrams used in this README
+└── Scripts/           # Analysis and processing scripts with configuration files
 ```
 
 ## Requirements
