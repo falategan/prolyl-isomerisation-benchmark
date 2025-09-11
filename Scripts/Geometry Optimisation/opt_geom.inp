@@ -1,0 +1,9 @@
+!r2SCAN-3c FREQ TIGHTOPT TIGHTSCF PAL16 MiniPrint PrintGap
+
+%method
+	WriteJSONPropertyfile True
+end
+
+%base "${name}"
+
+* xyzfile 0 1 ${input}

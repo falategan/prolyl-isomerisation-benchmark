@@ -1,0 +1,64 @@
+#!/bin/bash
+
+#PBS -l walltime=$walltime
+#PBS -l select=1:ncpus=$n_cpu:mpiprocs=$n_cpu:mem=$memory
+#PBS -N $name
+#PBS -e $name.err 
+#PBS -o $name.out
+#PBS -m ae
+#PBS -q ee
+
+#######################################
+# Set Variables
+#######################################
+
+SCRATCH_DIR="path to temporary workspace"
+
+ORCA_DIR="path to ORCA installation"
+
+#######################################
+# Execute Script
+#######################################
+
+# Set up Environment Variables
+export PATH="/usr/bin/date:$PATH"
+export PATH="/usr/bin/bc:$PATH"
+export PATH="/usr/bin/rsync:$PATH"
+export PATH="/apps/openmpi/4.1.1/bin:$PATH"
+export LD_LIBRARY_PATH="/apps/openmpi/4.1.1/lib:$LD_LIBRARY_PATH"
+export OMPI_MCA_plm_rsh_agent=
+
+# create TMP
+start=$(date +%s.%N)
+umask 0077
+TMP=${SCRATCH_DIR}/${PBS_JOBID}
+mkdir -p ${TMP}
+echo "Temporary work dir: ${TMP}"
+
+# Copy to TMP
+echo "Copying from ${PBS_O_WORKDIR}/ to ${TMP}/"
+rsync -vax "${PBS_O_WORKDIR}/" ${TMP}/
+cd ${TMP}/
+end=$(date +%s.%N)
+copytime=$( echo "$end - $start" | bc -l )
+echo "Copied to ${TMP} in ${copytime}s"
+
+# MY SCRIPT
+start=$(date +%s.%N)
+
+${ORCA_DIR}/orca $name.inp 1>>${PBS_O_WORKDIR}/${name}_orca.out 2>>${PBS_O_WORKDIR}/${name}_orca.err 
+
+end=$(date +%s.%N)
+runtime=$( echo "$end - $start" | bc -l )
+echo "Runtime: ${runtime}s"
+# END SCRIPT
+
+# copy back
+start=$(date +%s.%N)
+echo "Copying from ${TMP}/ to ${PBS_O_WORKDIR}/"
+rsync -vax "${TMP}/" ${PBS_O_WORKDIR}/
+[ $? -eq 0 ] && /bin/rm -rf ${TMP}
+end=$(date +%s.%N)
+copytime=$( echo "$end - $start" | bc -l )
+echo "Copied to ${PBS_O_WORKDIR} in ${copytime}s"
+

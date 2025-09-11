@@ -1,0 +1,714 @@
+---
+title: "Analyse Solvent Scans"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+## User-defined file paths
+
+```{r Define paths}
+
+gas_coordinate_path <- "../Data/xtb_gas_scan.intl"
+water_coordinate_path <- "../Data/xtb_H2O_scan.intl"
+CHCl3_coordinate_path <- "../Data/xtb_CHCl3_scan.intl"
+DMF_coordinate_path <- "../Data/xtb_DMF_scan.intl"
+
+gas_energy_path <- "../Data/xtb_gas_scan.relaxscanact.dat"
+water_energy_path <- "../Data/xtb_H2O_scan.relaxscanact.dat"
+CHCl3_energy_path <- "../Data/xtb_CHCl3_scan.relaxscanact.dat"
+DMF_energy_path <- "../Data/xtb_DMF_scan.relaxscanact.dat"
+
+gas_minima_output_path <- "../Data/gas_local_minima.csv"
+water_minima_output_path <- "../Data/water_local_minima.csv"
+CHCl3_minima_output_path <- "../Data/CHCl3_local_minima.csv"
+DMF_minima_output_path <- "../Data/DMF_local_minima.csv"
+
+plot_output_path <- "../Data/solvent_scans.png"
+```
+
+## Load required libraries
+
+```{r import libraries}
+
+library(tidyverse)
+library(hrbrthemes)
+
+```
+
+# Execute programme
+
+## Import data
+
+### Gas Phase
+
+```{r import psi_chi1_xtb, echo=FALSE, message=TRUE, warning=FALSE, paged.print=TRUE}
+
+psi_chi1_gas_coords <- read_csv(
+  gas_coordinate_path,
+  col_types = "iddddddddddddddddddddddddddd",
+  n_max = 20000
+  )
+
+psi_chi1_gas_energies <- read_table(
+  gas_energy_path,
+  col_names = c(
+    "Psi",
+    "Chi 1",
+    "Energy"
+    ),
+  col_types = "ddd",
+  n_max = 20000
+  ) 
+
+psi_chi1_gas <- bind_cols(
+  psi_chi1_gas_coords, 
+  psi_chi1_gas_energies
+  ) %>% 
+  mutate(
+  "Omega 1 Isomer" = "Trans",
+  "Omega 2 Isomer" = "Trans",
+  "Solvent" = "N/A"
+  )
+rm(
+  psi_chi1_gas_coords,
+  psi_chi1_gas_energies
+  )
+
+```
+
+### Water
+
+```{r import psi_chi1_water, echo=FALSE, message=TRUE, warning=FALSE, paged.print=TRUE}
+
+psi_chi1_water_coords <- read_csv(
+  water_coordinate_path,
+  col_types = "iddddddddddddddddddddddddddd",
+  n_max = 20000
+  )
+
+psi_chi1_water_energies <- read_table(
+  water_energy_path,
+  col_names = c(
+    "Psi",
+    "Chi 1",
+    "Energy"
+    ),
+  col_types = "ddd",
+  n_max = 20000
+  ) 
+
+psi_chi1_water <- bind_cols(
+  psi_chi1_water_coords, 
+  psi_chi1_water_energies
+  ) %>% 
+  mutate(
+  "Omega 1 Isomer" = "Trans",
+  "Omega 2 Isomer" = "Trans",
+  "Solvent" = "Water"
+  )
+
+rm(
+  psi_chi1_water_coords,
+  psi_chi1_water_energies
+  )
+
+
+```
+
+### Dimethylformamide
+
+```{r import psi_chi1_dmf, echo=FALSE, message=TRUE, warning=FALSE, paged.print=TRUE}
+
+psi_chi1_dmf_coords <- read_csv(
+  DMF_coordinate_path,
+  col_types = "iddddddddddddddddddddddddddd",
+  n_max = 20000
+  )
+
+psi_chi1_dmf_energies <- read_table(
+  DMF_energy_path,
+  col_names = c(
+    "Psi",
+    "Chi 1",
+    "Energy"
+    ),
+  col_types = "ddd",
+  n_max = 20000
+  ) 
+
+psi_chi1_dmf <- bind_cols(
+  psi_chi1_dmf_coords, 
+  psi_chi1_dmf_energies
+  ) %>% 
+  mutate(
+  "Omega 1 Isomer" = "Trans",
+  "Omega 2 Isomer" = "Trans",
+  "Solvent" = "Dimethylformamide"
+  )
+
+rm(
+  psi_chi1_dmf_coords,
+  psi_chi1_dmf_energies
+  )
+
+```
+
+### Chloroform
+
+```{r import psi_chi1_chloroform, echo=FALSE, message=TRUE, warning=FALSE, paged.print=TRUE}
+
+psi_chi1_chloroform_coords <- read_csv(
+  CHCl3_coordinate_path,
+  col_types = "iddddddddddddddddddddddddddd",
+  n_max = 20000
+  )
+
+psi_chi1_chloroform_energies <- read_table(
+  CHCl3_energy_path,
+  col_names = c(
+    "Psi",
+    "Chi 1",
+    "Energy"
+    ),
+  col_types = "ddd",
+  n_max = 20000
+  ) 
+
+psi_chi1_chloroform <- bind_cols(
+  psi_chi1_chloroform_coords, 
+  psi_chi1_chloroform_energies
+  ) %>% 
+  mutate(
+  "Omega 1 Isomer" = "Trans",
+  "Omega 2 Isomer" = "Trans",
+  "Solvent" = "chloroform"
+  )
+
+rm(
+  psi_chi1_chloroform_coords,
+  psi_chi1_chloroform_energies
+  )
+
+```
+
+## Join Solvents
+
+```{r Join solvents}
+all_surfaces <- bind_rows(
+  psi_chi1_water,
+  psi_chi1_dmf,
+  psi_chi1_gas,
+  psi_chi1_chloroform
+) %>%
+  mutate(
+    Psi = (Psi -180) %% 360 - 180,
+    Energy = Energy - min(Energy),
+    eta = 180 - eta %% 360
+  )
+
+```
+
+## Calculate Puckering Coordinates
+
+```{r Puckering coordinates}
+
+# Westhof
+all_surfaces <- all_surfaces %>%
+  mutate(
+    P = (-atan2(
+        (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5),
+        (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5) 
+      )*180/pi)%%360,
+    tau = 2/5*sqrt(
+      (
+        (
+          (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5)  
+          )^2
+        ) + (
+          (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5)  
+          )^2
+      )*180/pi
+    )
+```
+
+## Identify local minima
+
+### Water
+
+```{r water local minima}
+
+rm(psi_chi1_water)
+
+water_local_minima <- tibble(
+  "Psi" = double(),
+  "Chi 1" = double(),
+  "Energy" = integer(),
+  "phi" = double(),
+  "P" = double(),
+  "tau" = double(),
+  "omega" = double(),
+  "eta" = double(),
+  "Boltzmann Factor" = double()
+  )
+
+water_surface <- all_surfaces %>%
+      filter(Solvent == "Water") %>%
+   select(Psi | `Chi 1` | phi | omega | eta | P | tau| Energy) %>%
+  mutate(Energy = (Energy - min(Energy))) %>%
+  mutate("Boltzmann Factor" = exp(-Energy/(298.15 *3.1668*10^(-6)))) %>%
+  mutate(Energy = Energy*627.5094740631) %>%
+  arrange(Energy)
+
+
+
+count <- 0
+
+for (i in seq(-180, 180, 1)) {
+  for (j in seq(-45, 45, 3)) {
+    
+    candidate <- water_surface %>%
+      filter(Psi == i, `Chi 1` == j)
+    
+    neighbours <- water_surface %>%
+      filter(
+        (
+          Psi > (i - 185) %% 360 - 180 &
+          Psi <= (i - 175) %% 360 - 180 
+        ) &
+          (
+            `Chi 1` > j - 5 & 
+            `Chi 1` <= j + 5 
+          ) &
+          !(Psi == i & `Chi 1` == j)
+      )
+    
+    if (length(neighbours > 1) & all(candidate$Energy < neighbours$Energy)) {
+      water_local_minima <- water_local_minima %>%
+        add_row(candidate)
+    }
+    
+    count <- count + 1
+  }
+  print(100 * count/32851)
+}
+
+water_local_minima <- water_local_minima %>% 
+  arrange(Energy) %>%
+  mutate(
+    Cluster = case_when(
+      Psi > 120 & phi > -100 ~ "P", 
+      Psi > 90 ~ "B", 
+      Psi > 30 & phi > -110 ~ "G", 
+      Psi > 30 ~ "Z", 
+      Psi > -75 & phi > -80 ~ "A", 
+      Psi > -30 ~ "D", Psi > -100 ~ "N"
+      ),
+    Pucker = case_when(
+      P < 54 | P > 342 ~ "γ-endo",
+      P < 234 & P > 162 ~ "γ-exo",
+      P < 180 ~ "N-endo",
+      .default = "N-exo"
+      ),
+    Name = paste(
+      Pucker, Cluster,
+      sep = "-"
+      )
+    )
+
+write_csv(
+  water_local_minima,
+  water_minima_output_path
+  )
+
+```
+
+### DMF
+
+```{r DMF local minima}
+
+DMF_local_minima <- tibble(
+  "Psi" = double(),
+  "Chi 1" = double(),
+  "Energy" = integer(),
+  "phi" = double(),
+  "P" = double(),
+  "tau" = double(),
+  "omega" = double(),
+  "eta" = double(),
+  "Boltzmann Factor" = double()
+  )
+
+DMF_surface <- all_surfaces %>%
+      filter(Solvent == "Dimethylformamide") %>%
+   select(Psi | `Chi 1` | phi | omega | eta | P | tau| Energy) %>%
+  mutate(Energy = (Energy - min(Energy))) %>%
+  mutate("Boltzmann Factor" = exp(-Energy/(298.15 *3.1668*10^(-6)))) %>%
+  mutate(Energy = Energy*627.5094740631) %>%
+  arrange(Energy)
+
+count <- 0
+
+for (i in seq(-180, 180, 1)) {
+  for (j in seq(-45, 45, 3)) {
+    
+    candidate <- DMF_surface %>%
+      filter(Psi == i, `Chi 1` == j)
+    
+    neighbours <- DMF_surface %>%
+      filter(
+        (
+          Psi > (i - 185) %% 360 - 180 &
+          Psi <= (i - 175) %% 360 - 180 
+        ) &
+          (
+            `Chi 1` > j - 5 & 
+            `Chi 1` <= j + 5 
+          ) &
+          !(Psi == i & `Chi 1` == j)
+      )
+    
+    if (length(neighbours > 1) & all(candidate$Energy < neighbours$Energy)) {
+      DMF_local_minima <- DMF_local_minima %>%
+        add_row(candidate)
+    }
+    
+    count <- count + 1
+  }
+  print(100*count/32851)
+}
+
+DMF_local_minima <- DMF_local_minima %>% 
+  arrange(Energy) %>%
+  mutate(
+    Cluster = case_when(
+      Psi > 120 & phi > -100 ~ "P", 
+      Psi > 90 ~ "B", 
+      Psi > 30 & phi > -110 ~ "G", 
+      Psi > 30 ~ "Z", 
+      Psi > -75 & phi > -80 ~ "A", 
+      Psi > -30 ~ "D", Psi > -100 ~ "N"
+      ),
+    Pucker = case_when(
+      P < 54 | P > 342 ~ "γ-endo",
+      P < 234 & P > 162 ~ "γ-exo",
+      P < 180 ~ "N-endo",
+      .default = "N-exo"
+      ),
+    Name = paste(
+      Pucker, Cluster,
+      sep = "-"
+      )
+    )
+
+write_csv(
+  DMF_local_minima,
+  DMF_minima_output_path
+  )
+
+```
+
+### CHCl3
+
+```{r CHCl3 local minima}
+
+CHCl3_local_minima <- tibble(
+  "Psi" = double(),
+  "Chi 1" = double(),
+  "Energy" = integer(),
+  "phi" = double(),
+  "P" = double(),
+  "tau" = double(),
+  "omega" = double(),
+  "eta" = double(),
+  "Boltzmann Factor" = double()
+  )
+
+CHCl3_surface <- all_surfaces %>%
+      filter(Solvent == "chloroform") %>%
+   select(Psi | `Chi 1` | phi | omega | eta | P | tau| Energy) %>%
+  mutate(Energy = (Energy - min(Energy))) %>%
+  mutate("Boltzmann Factor" = exp(-Energy/(298.15 *3.1668*10^(-6)))) %>%
+  mutate(Energy = Energy*627.5094740631) %>%
+  arrange(Energy)
+
+count <- 0
+
+for (i in seq(-180, 180, 1)) {
+  for (j in seq(-45, 45, 3)) {
+    
+    candidate <- CHCl3_surface %>%
+      filter(Psi == i, `Chi 1` == j)
+    
+    neighbours <- CHCl3_surface %>%
+      filter(
+        (
+          Psi > (i - 185) %% 360 - 180 &
+          Psi <= (i - 175) %% 360 - 180 
+        ) &
+          (
+            `Chi 1` > j - 5 & 
+            `Chi 1` <= j + 5 
+          ) &
+          !(Psi == i & `Chi 1` == j)
+      )
+    
+    if (length(neighbours > 1) & all(candidate$Energy < neighbours$Energy)) {
+      CHCl3_local_minima <- CHCl3_local_minima %>%
+        add_row(candidate)
+    }
+    
+    count <- count + 1
+  }
+  print(100 * count/32851)
+}
+
+CHCl3_local_minima <- CHCl3_local_minima %>% 
+  arrange(Energy) %>%
+  mutate(
+    Cluster = case_when(
+      Psi > 120 & phi > -100 ~ "P", 
+      Psi > 90 ~ "B", 
+      Psi > 30 & phi > -110 ~ "G", 
+      Psi > 30 ~ "Z", 
+      Psi > -75 & phi > -80 ~ "A", 
+      Psi > -30 ~ "D", Psi > -100 ~ "N"
+      ),
+    Pucker = case_when(
+      P < 54 | P > 342 ~ "γ-endo",
+      P < 234 & P > 162 ~ "γ-exo",
+      P < 180 ~ "N-endo",
+      .default = "N-exo"
+      ),
+    Name = paste(
+      Pucker, Cluster,
+      sep = "-"
+      )
+    )
+
+write_csv(
+  CHCl3_local_minima,
+  CHCl3_minima_output_path
+  )
+
+```
+
+### Gas
+```{r Gas local minima}
+
+gas_local_minima <- tibble(
+  "Psi" = double(),
+  "Chi 1" = double(),
+  "Energy" = integer(),
+  "phi" = double(),
+  "P" = double(),
+  "tau" = double(),
+  "omega" = double(),
+  "eta" = double(),
+  "Boltzmann Factor" = double()
+  )
+
+Gas_surface <- all_surfaces %>%
+      filter(Solvent == "N/A") %>%
+   select(Psi | `Chi 1` | phi | omega | eta | P | tau| Energy) %>%
+  mutate(Energy = (Energy - min(Energy))) %>%
+  mutate("Boltzmann Factor" = exp(-Energy/(298.15 *3.1668*10^(-6)))) %>%
+  mutate(Energy = Energy*627.5094740631) %>%
+  arrange(Energy)
+
+count <- 0
+
+for (i in seq(-180, 180, 1)) {
+  for (j in seq(-45, 45, 3)) {
+    
+    candidate <- Gas_surface %>%
+      filter(Psi == i, `Chi 1` == j)
+    
+    neighbours <- Gas_surface %>%
+      filter(
+        (
+          Psi > (i - 185) %% 360 - 180 &
+          Psi <= (i - 175) %% 360 - 180 
+        ) &
+          (
+            `Chi 1` > j - 5 & 
+            `Chi 1` <= j + 5 
+          ) &
+          !(Psi == i & `Chi 1` == j)
+      )
+    
+    if (length(neighbours > 1) & all(candidate$Energy < neighbours$Energy)) {
+      gas_local_minima <- gas_local_minima %>%
+        add_row(candidate)
+    }
+    
+    count <- count + 1
+  }
+  print(100 * count/32851)
+}
+
+gas_local_minima <- gas_local_minima %>% 
+  arrange(Energy) %>%
+  mutate(
+    Cluster = case_when(
+      Psi > 120 & phi > -100 ~ "P", 
+      Psi > 90 ~ "B", 
+      Psi > 30 & phi > -110 ~ "G", 
+      Psi > 30 ~ "Z", 
+      Psi > -75 & phi > -80 ~ "A", 
+      Psi > -30 ~ "D", Psi > -100 ~ "N"
+      ),
+    Pucker = case_when(
+      P < 54 | P > 342 ~ "γ-endo",
+      P < 234 & P > 162 ~ "γ-exo",
+      P < 180 ~ "N-endo",
+      .default = "N-exo"
+      ),
+    Name = paste(
+      Pucker, Cluster,
+      sep = "-"
+      )
+    )
+
+
+write_csv(
+  gas_local_minima,
+  gas_minima_output_path
+  )
+
+```
+
+## Plots
+
+```{r solvent plots}
+
+solvent_minima <- bind_rows(
+  list(
+    "Gas Phase" =  gas_local_minima, 
+    "Water" = water_local_minima, 
+    "Dimethylformamide" = DMF_local_minima, 
+    "Chloroform" = CHCl3_local_minima
+    ), 
+  .id = "Solvent"
+  )
+
+solvent_surfaces <- bind_rows(
+  list(
+    "Gas Phase" =  Gas_surface, 
+    Water = water_surface, 
+    Dimethylformamide = DMF_surface, 
+    Chloroform = CHCl3_surface
+    ), 
+  .id = "Solvent"
+  )
+
+plot <- solvent_surfaces %>%
+  ggplot(
+    aes(x = Psi,
+        y = `Chi 1`,
+        fill = Energy)
+  ) +
+  geom_raster()+
+  geom_tile(
+    data = solvent_minima %>% filter(Energy < 3), 
+    width = 1,
+    height = 3,
+    colour = "white",
+    linewidth = 0.5
+    ) +
+  coord_equal()+
+  scale_y_continuous(
+    name = "χ¹",
+    breaks = seq(-60,60,15),
+    expand = expansion(add = 3),
+    labels = ~paste0(.x, "°")
+  )+
+  scale_x_continuous(
+    name = "ψ",
+    breaks = seq(-180,180,15),
+    expand = expansion(add = 3),
+    labels = ~paste0(.x, "°"),
+
+  )+
+  scale_fill_viridis_c(
+    breaks = seq(0, 20, 2)
+    )+
+  facet_wrap(
+    ~factor(
+      Solvent, 
+      levels = c("Gas Phase", "Chloroform", "Dimethylformamide", "Water")
+      ), 
+    ncol = 1
+    ) +
+  guides(
+    fill = guide_colorbar(
+      position = "bottom"
+      
+    )
+  )+
+  theme_ipsum(
+    base_size = 6*.pt,
+    axis_title_face = "italic",
+    axis_title_family = "serif",
+    axis_text_size = 6*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,5,0,0)
+  ) +
+  theme(
+    legend.key.width = unit(50, "mm"),
+    panel.spacing = unit(2, "mm"),
+    axis.text.x = element_text(
+      angle = -90,
+      hjust = 0,
+       vjust = 0.5
+      ),
+    #legend.title.position = "bottom",
+    legend.title = element_text(
+      hjust = 0,
+      vjust = 0.85,
+      margin = margin(0, 16, 0, 0, unit = "pt"),
+      size = 6*.pt
+      ),
+    legend.text = element_text(
+      hjust = 0,
+      angle = -90,
+      vjust = 0.5,
+      family = "serif",
+    ),
+    legend.ticks = element_line(
+      colour = "black"
+    ),
+    legend.ticks.length =  unit(5, "mm"),
+    legend.key.height = unit(10, "mm")
+  )
+
+plot
+
+ggsave(
+  plot_output_path, 
+  plot, 
+  height = unit(15.92, "cm"), 
+  width = unit(15.92, "cm")
+  )
+
+```
+

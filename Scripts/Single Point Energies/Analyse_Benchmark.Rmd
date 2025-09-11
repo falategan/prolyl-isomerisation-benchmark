@@ -1,0 +1,1839 @@
+---
+title: "Analyse_Benchmark"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+# Setup
+
+## User-defined file paths
+
+```{r Define paths}
+
+# Input Paths
+
+CCSD_data_dir <- "CCSD/Data/"
+DFT_data_dir <- "DFT/Data/"
+
+critical_points <- tibble(
+  name = c(
+    "transG_g-exo",
+    "transG_g-endo",
+    "cisD_g-exo",
+    "cisA_g-endo",
+    "syn-endo",
+    "syn-exo",
+    "anti-exo",
+    "anti-endo"
+  ),
+  critical_point = c(
+    "Minimum",
+    "Minimum",
+    "Minimum",
+    "Minimum",
+    "TS",
+    "TS",
+    "TS",
+    "TS"
+  ),
+  )
+
+functionals = c(
+  "B97M-V",
+  "B97M-D4",
+  "r2SCAN_D3BJ",
+  "wB97X-D4rev",
+  "wB97X-V",
+  "M062X_D3ZERO",
+  "PBE0_D3BJ",
+  "wB97M-V",
+  "wB97M-D4rev",
+  "DSD-BLYP_D3BJ"
+)
+
+basis_sets = c("def2-TZVPP", "def2-QZVPP")
+
+
+# Output Paths
+
+extrapolate_rxn_energy_plot_path <- "CCSD/Data/rxn_extrapolation.png"
+extrapolate_barrier_plot_path <- "CCSD/Data/barrier_extrapolation.png"
+extrapolate_table_path <- "CCSD/Data/extrapolation_table.csv"
+
+DFT_error_plot_path <- "DFT/Data/DFT_deviation.png"
+DFT_rxn_basis_set_plot_path <- "DFT/Data/rxn_basis_set_dependance.png"
+DFT_barrier_basis_set_plot_path <- "DFT/Data/barrier_basis_set_dependance.png"
+rxn_dispersion_plot_path <- "DFT/Data/rxn_dispersion.png"
+barrier_dispersion_plot_path <- "DFT/Data/barrier_dispersion.png"
+
+```
+
+## Load required libraries
+
+```{r import libraries}
+
+library(tidyverse)
+library(hrbrthemes)
+library(jsonlite)
+library(cetcolor)
+library(ggtext)
+library(ggsci)
+library(legendry)
+library(ggh4x)
+
+```
+
+# Execute program
+
+## CCSD 
+
+### Import Properties
+
+```{r import CCSD Properies}
+
+CCSD_energies <- tibble()
+
+for (i in 1:length(critical_points$name)) {
+  path <- paste0(
+    CCSD_data_dir,
+    "CCSD_",
+    critical_points$name[i],
+    ".property.json"
+    )
+  json <- read_json(
+    path,
+    simplifyVector = FALSE
+  )
+  row <- tibble(
+    "Source" = critical_points$name[i],
+     "CCSD_Ano-2_SCF" = json[["Geometry_1"]][["SCF_Energy"]][[1]][["SCF_ENERGY"]],
+     "DLPNO_Ano-2_SCF" = json[["Geometry_1"]][["SCF_Energy"]][[2]][["SCF_ENERGY"]],
+     "DLPNO_Ano-3_SCF" = json[["Geometry_1"]][["SCF_Energy"]][[3]][["SCF_ENERGY"]],
+     "DLPNO_Ano-4_SCF" = json[["Geometry_1"]][["SCF_Energy"]][[4]][["SCF_ENERGY"]],
+     "CCSD_Ano-2_CORR" = json[["Geometry_1"]][["MDCI_Energies"]][[1]][["CORRENERGY"]],
+     "DLPNO_Ano-2_CORR" = json[["Geometry_1"]][["MDCI_Energies"]][[2]][["CORRENERGY"]],
+     "DLPNO_Ano-3_CORR" = json[["Geometry_1"]][["MDCI_Energies"]][[3]][["CORRENERGY"]],
+     "DLPNO_Ano-4_CORR" = json[["Geometry_1"]][["MDCI_Energies"]][[4]][["CORRENERGY"]],
+     "CCSD_Ano-2_TOTAL" = json[["Geometry_1"]][["MDCI_Energies"]][[1]][["TOTALENERGY"]],
+     "DLPNO_Ano-2_TOTAL" = json[["Geometry_1"]][["MDCI_Energies"]][[2]][["TOTALENERGY"]],
+     "DLPNO_Ano-3_TOTAL" = json[["Geometry_1"]][["MDCI_Energies"]][[3]][["TOTALENERGY"]],
+     "DLPNO_Ano-4_TOTAL" = json[["Geometry_1"]][["MDCI_Energies"]][[4]][["TOTALENERGY"]],
+     "CBS_SCF" = json[["Geometry_1"]][["Energy_Extrapolation"]][["SCFCBS"]],
+     "CBS_CORR" = json[["Geometry_1"]][["Energy_Extrapolation"]][["CORRCBS"]],
+     "CBS_TOTAL" = json[["Geometry_1"]][["Energy_Extrapolation"]][["TOTALCBS"]],
+     "Critical Point" = critical_points$critical_point[i]
+  )
+  CCSD_energies <- bind_rows(
+    CCSD_energies,
+    row
+  ) 
+}
+
+
+rm(row, json)
+```
+
+### Calculate relative energies
+
+```{r CCSD Relative Energies}
+
+CCSD_energies <- CCSD_energies %>%
+  mutate(
+    "CBS_correction" = `CCSD_Ano-2_CORR`-`DLPNO_Ano-2_CORR`,
+    "CCSD_Ano-2_deviation" = `CCSD_Ano-2_CORR`-`DLPNO_Ano-2_CORR`
+    )
+
+reference <- CCSD_energies %>%
+  filter(CBS_TOTAL == min(CBS_TOTAL)) %>%
+  pivot_longer (
+  cols = !Source & !`Critical Point`,
+  names_pattern =  "(.*)_(.*)",
+  names_to = c(
+    "Level of Theory",
+    "Component"
+  ),
+  values_to = "Reference Energy"
+) %>%
+  select(!Source & !`Critical Point`)
+
+
+
+CCSD_energies <- CCSD_energies %>%
+  pivot_longer (
+  cols = !Source & !`Critical Point`,
+  names_pattern =  "(.*)_(.*)",
+  names_to = c(
+    "Level of Theory",
+    "Component"
+  ),
+  values_to = "Energy"
+) %>%
+  left_join(
+    reference
+  ) %>%
+  mutate(
+    Energy = (Energy-`Reference Energy`)*627.5094740631
+  ) %>% 
+  pivot_wider(
+  id_cols = Source | `Level of Theory`|`Critical Point`,
+  names_from = Component,
+  values_from = Energy,
+  unused_fn = first
+  ) %>% 
+  mutate(
+    Source = case_match(
+      Source,
+      "anti-exo" ~ "<i>anti-exo</i>",
+      "syn-exo" ~ "<i>syn-exo</i>" ,
+      "anti-endo" ~ "<i>anti-endo</i>",
+      "syn-endo" ~ "<i>syn-endo</i>",
+      "transG_g-exo" ~ "<i>trans</i>-G<sub>γ</sub>",
+      "transG_g-endo" ~ "<i>trans</i>-<sup>γ</sup>G",
+      "cisD_g-exo" ~ "<i>cis</i>-D<sub>γ</sub>",
+      "cisA_g-endo" ~ "<i>cis</i>-<sup>γ</sup>A",
+      .default = Source
+    )
+  )
+
+CBS_Energies <- CCSD_energies %>%
+  filter(`Level of Theory` == "CBS") %>% 
+  select(
+    Source,
+    `Critical Point`,
+    TOTAL
+    ) %>%
+  mutate(
+    "CBS_REFERENCE_ENERGY" = TOTAL,
+    .keep = "unused"
+  )
+
+
+# TABULATE EXTRAPOLATION
+
+CCSD_energies %>%
+  filter(`Level of Theory` == "CBS") %>%
+  mutate(
+    "Conformation" = gsub("<.{1,4}>", "", Source),
+    "Extrapolated SCF Energy" = SCF,
+    "Extrapolated Correlation Energy" = CORR,
+    "DLPNO Correlation Correction" = correction,
+    "Total CBS Energy" = TOTAL,
+    .keep = "none"
+  ) %>%
+  arrange(`Total CBS Energy`) %>%
+  write_csv(
+    extrapolate_table_path
+  )
+
+```
+
+
+### Prepare Extrapolation Plots
+
+```{r Prepare Extrapolation Plots}
+
+plot_data <- CCSD_energies %>%
+  mutate(
+    `Level of Theory` = case_match(
+      `Level of Theory`,
+      "CCSD_Ano-2" ~ "CCSD(T)/ano-pVDZ",
+      "DLPNO_Ano-2" ~ "DLPNO-CCSD(T)/ano-pVDZ",
+      "DLPNO_Ano-3" ~ "DLPNO-CCSD(T)/ano-pVTZ",
+      "DLPNO_Ano-4" ~ "DLPNO-CCSD(T)/ano-pVQZ",
+      "CBS" ~ "CCSD(T)/CBS"
+    ),
+    `Level of Theory` = factor(
+      `Level of Theory`, 
+      levels = 
+        rev(c(
+        "CCSD(T)/ano-pVDZ",
+        "DLPNO-CCSD(T)/ano-pVDZ",
+        "DLPNO-CCSD(T)/ano-pVTZ",
+        "DLPNO-CCSD(T)/ano-pVQZ",
+        "CCSD(T)/CBS"
+        )
+      
+      )),
+    Source = factor(
+      Source,
+      levels = 
+        c(
+          "<i>trans</i>-G<sub>γ</sub>",
+          "<i>trans</i>-<sup>γ</sup>G",
+          "<i>cis</i>-D<sub>γ</sub>",
+          "<i>cis</i>-<sup>γ</sup>A",
+          "<i>anti-exo</i>",
+          "<i>syn-exo</i>",
+          "<i>anti-endo</i>",
+          "<i>syn-endo</i>"
+      )
+    
+    )
+  ) 
+
+
+cardinal_number <- function(x) {
+  if (grepl("pVDZ$", x)) {
+    return(2)
+  } else if (grepl("pVTZ$", x)) {
+    return(3)
+  } else if (grepl("pVQZ$", x))  {
+    return(4)
+  } else if (grepl("CBS$", x))  {
+    return(Inf)
+  }
+  }
+
+alpha <- 4.480
+beta <- 2.970 
+
+e <- function(x) {
+  exp(-alpha*sqrt(x))
+}
+
+extrapolate_SCF <- function(x, CBS, QZ) {
+  CBS + e(x)*(QZ-CBS)/e(4)
+}
+
+extrapolate_CORR <- function(x, CBS, QZ) {
+  CBS + (QZ-CBS)*4^beta/x^beta
+}
+
+extrapolate_both <- function(x, CBS_CORR, QZ_CORR, CBS_SCF, QZ_SCF) {
+  extrapolate_SCF(x, CBS_SCF, QZ_SCF) + 
+  extrapolate_CORR(x, CBS_CORR, QZ_CORR)
+}
+
+plot_data <- CCSD_energies %>%
+  mutate(
+    `Level of Theory` = case_match(
+      `Level of Theory`,
+      "CCSD_Ano-2" ~ "CCSD(T)/ano-pVDZ",
+      "DLPNO_Ano-2" ~ "DLPNO-CCSD(T)/ano-pVDZ",
+      "DLPNO_Ano-3" ~ "DLPNO-CCSD(T)/ano-pVTZ",
+      "DLPNO_Ano-4" ~ "DLPNO-CCSD(T)/ano-pVQZ",
+      "CBS" ~ "CCSD(T)/CBS"
+    ),
+    `Level of Theory` = factor(
+      `Level of Theory`, 
+      levels = 
+        rev(c(
+          "CCSD(T)/ano-pVDZ",
+          "DLPNO-CCSD(T)/ano-pVDZ",
+          "DLPNO-CCSD(T)/ano-pVTZ",
+          "DLPNO-CCSD(T)/ano-pVQZ",
+          "CCSD(T)/CBS"
+        )
+        
+        )),
+    Source = factor(
+      Source,
+      levels = 
+        c(
+          "<i>trans</i>-G<sub>γ</sub>",
+          "<i>trans</i>-<sup>γ</sup>G",
+          "<i>cis</i>-D<sub>γ</sub>",
+          "<i>cis</i>-<sup>γ</sup>A",
+          "<i>anti-exo</i>",
+          "<i>syn-exo</i>",
+          "<i>anti-endo</i>",
+          "<i>syn-endo</i>"
+        )
+      
+    ),
+    Rank =  case_match(
+      Source,
+      "<i>trans</i>-G<sub>γ</sub>" ~ 1,
+      "<i>trans</i>-<sup>γ</sup>G" ~ 2,
+      "<i>cis</i>-D<sub>γ</sub>" ~ 3,
+      "<i>cis</i>-<sup>γ</sup>A" ~ 4,
+      "<i>anti-exo</i>" ~ 1,
+      "<i>syn-exo</i>" ~ 2,
+      "<i>anti-endo</i>" ~ 3,
+      "<i>syn-endo</i>" ~ 4
+    ),
+  )  %>%
+  separate_wider_delim(
+    cols = `Level of Theory`,
+    delim = "/",
+    names = c("Method", "Basis Set")
+  ) %>%
+  mutate(
+    cardinal_number = sapply(`Basis Set`, cardinal_number)
+  ) 
+
+CBS <- plot_data %>%
+  filter(`Basis Set` == "CBS") %>%
+  rename(
+    CBS_SCF = SCF,
+    CBS_CORR = CORR,
+  ) %>%
+  select(
+    Source,
+    CBS_SCF,
+    CBS_CORR
+  )
+
+QZ <- plot_data %>%
+  filter(`Basis Set` == "ano-pVQZ") %>%
+  rename(
+    QZ_SCF = SCF,
+    QZ_CORR = CORR,
+  ) %>%
+  select(
+    Source,
+    QZ_SCF,
+    QZ_CORR
+  )
+
+plot_data <- plot_data %>%
+  left_join(CBS) %>%
+  left_join(QZ)
+
+
+CCSD_energies %>%
+  filter(`Level of Theory` == "CBS") %>%
+  mutate(
+    "Conformation" = gsub("<.{1,4}>", "", Source),
+    "Extrapolated SCF Energy" = SCF,
+    "Extrapolated Correlation Energy" = CORR,
+    "DLPNO Correlation Correction" = correction,
+    "Total CBS Energy" = TOTAL,
+    .keep = "none"
+  ) %>%
+  arrange(`Total CBS Energy`) %>%
+  write_csv(
+    extrapolate_table_path
+  )
+
+
+```
+
+
+### Extrapolation Plots
+#### Plot Reaction Energy Extrapolation
+
+```{r Plot Reaction Energy Extrapolation}
+
+rxn_energy_data <- plot_data %>%
+  filter(`Critical Point` == "Minimum")
+
+plot <- rxn_energy_data %>%
+  ggplot(
+    aes(
+      x = cardinal_number,
+      shape = Method
+    )
+  ) +
+  geom_point(
+    data = rxn_energy_data %>%
+      filter(cardinal_number >= 2, cardinal_number < 7),
+    aes(
+      y= CORR,
+      colour = "CORR"
+    ),
+    size = 2) +
+  geom_point(
+    data = rxn_energy_data %>%
+      filter(cardinal_number > 2, cardinal_number < 7),
+    aes(
+      y= SCF,
+      colour = "SCF"
+    ),
+    size = 2) +
+  geom_point(
+    data = rxn_energy_data %>%
+      filter(cardinal_number > 2),
+    aes(
+      y= TOTAL,
+      colour = "TOTAL"
+    ),
+    size = 2
+    ) +
+  geom_point(
+    data = rxn_energy_data %>%
+      filter(is.infinite(cardinal_number)),
+    aes(
+      y= TOTAL,
+      colour = "TOTAL",
+      shape = "EP3"
+    ),
+    size = 2
+    ) +
+  geom_smooth(
+    data = rxn_energy_data %>%
+      filter(cardinal_number == 3 | cardinal_number == 4),
+    aes(
+      y = extrapolate_CORR(cardinal_number, CBS_CORR, QZ_CORR),
+      group = Method,
+      colour = "CORR",
+      linetype = "Extrapolation"
+    ),
+    method = "lm",
+    fullrange = TRUE,
+    formula = y ~ I(1/x^beta),
+    se = FALSE,
+    linewidth = 0.5,
+  ) +
+  geom_smooth(
+    data = rxn_energy_data %>%
+      filter(cardinal_number == 3 | cardinal_number == 4),
+    aes(
+      y = extrapolate_SCF(cardinal_number, CBS_SCF, QZ_SCF),
+      group = Method,
+      colour = "SCF",
+      linetype = "Extrapolation"
+    ),
+    method = "lm",
+    fullrange = TRUE,
+    formula = y ~ exp(-alpha*sqrt(x)),
+    se = FALSE,
+    linewidth = 0.5,
+  ) +
+  geom_smooth(
+    data = rxn_energy_data %>%
+      filter(cardinal_number == 3 | cardinal_number == 4),
+    aes(
+      y = extrapolate_both(cardinal_number, CBS_CORR, QZ_CORR, CBS_SCF, QZ_SCF),
+      group = Method,
+      colour = "TOTAL",
+      linetype = "Extrapolation"
+    ),
+    method = "lm",
+    fullrange = TRUE,
+    formula = y ~ exp(-alpha*sqrt(x))+I(1/x^beta),
+    se = FALSE,
+    linewidth = 0.5,
+  ) +
+  geom_hline(
+    aes(
+      yintercept = 0
+    ),
+    colour = "black",
+    linetype = 1,
+    linewidth = 0.25
+  ) +
+  
+  geom_hline(
+    aes(
+      yintercept = CBS_CORR,
+      colour = "CORR",
+      linetype = "CBS Limit"
+    )
+  ) +
+  geom_hline(
+    aes(
+      yintercept = CBS_SCF,
+      colour = "SCF",
+      linetype = "CBS Limit"
+    )
+  ) +
+  geom_hline(
+    aes(
+      yintercept = CBS_SCF + CBS_CORR,
+      colour = "TOTAL",
+      linetype = "CBS Limit"
+    )
+  ) +
+  geom_segment(
+    aes(
+      y = SCF + CORR,
+      yend = SCF + CORR + correction,
+      colour = "Correction",
+      linetype = "Correction"
+    ),
+    arrow = arrow(
+      type = "closed",
+      length = unit(2, "pt")
+    ),
+    linewidth = 1
+  )+
+  geom_segment(
+    aes(
+      y = CORR -  deviation,
+      yend = CORR ,
+      colour = "Correction",
+      linetype = "Correction"
+    ),
+    arrow = arrow(
+      type = "closed",
+      length = unit(2, "pt")
+    ),
+    linewidth = 1
+  )+
+  scale_x_continuous(
+    name = "Cardinal Number",
+    oob = scales::squish_infinite,
+    limits = c(2,5)
+    
+  ) +
+  scale_y_continuous(
+    name = "ΔE",
+    breaks = seq(-4, 30, 2),
+  )+
+  scale_color_locuszoom(
+    name = "Energy Component",
+    labels = c(
+      "CORR" = "ΔE<sub>corr</sub>",
+      "SCF" = "ΔE<sub>HF</sub>",
+      "TOTAL" = "ΔE<sub>HF</sub>+ΔE<sub>corr</sub>",
+      "Correction" = "ΔΔE<sup>DLPNO</sup>"
+    ),
+    limits = c(
+      "SCF",
+      "CORR",
+      "TOTAL",
+      "Correction"
+    )
+  )+
+  scale_linetype_manual(
+    values = c(
+      "Extrapolation" = 1,
+      "CBS Limit" = 2,
+      "Correction" = 1
+    ),
+  ) +
+  scale_shape(
+    name = "Method",
+    limits = c(
+      "CCSD(T)",
+      "DLPNO-CCSD(T)",
+      "EP3" = "EP3"
+    )
+  ) +
+  guides(
+    colour = guide_legend(
+      name = "Energy Component",
+    ),
+    shape = guide_legend(
+      name = "Method",
+    ),
+    linetype = guide_none(),
+  )+
+    facet_wrap(
+     ~Source, 
+     nrow = 1,
+    ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,0,0)
+  )+
+  theme(
+    legend.title = element_text(
+      hjust = 0
+    ),
+    legend.title.position = "top",
+    legend.text = element_markdown(
+      margin = margin(t = 3, b = 3)
+    ),
+    strip.placement = "inside",
+    strip.text.x.top = element_markdown(
+      angle = 0,
+      hjust = 0.5
+    ),
+    panel.spacing.x = unit(5, "mm"),
+    panel.grid.minor.x = element_blank(),
+  )
+
+plot
+
+ggsave(
+  extrapolate_rxn_energy_plot_path,
+  plot,
+  height = unit(8, "cm"), 
+  width = unit(15.92, "cm"),
+  dpi = 600
+)
+
+```
+
+#### Plot Barrier Height Extrapolation
+
+```{r Plot Barrier Height Extrapolation}
+
+rxn_barrier_data <- plot_data %>%
+  filter(`Critical Point` == "TS") %>%
+  mutate(
+    Source = factor(
+      Source,
+      levels = 
+        c(
+          "<i>anti-exo</i>",
+          "<i>syn-exo</i>",
+          "<i>anti-endo</i>",
+          "<i>syn-endo</i>"
+      )
+    )
+  )
+
+plot <- rxn_barrier_data %>%
+  ggplot(
+    aes(
+      x = cardinal_number,
+      shape = Method
+    )
+  ) +
+  geom_point(
+    data = rxn_barrier_data %>%
+      filter(cardinal_number >= 2, cardinal_number < 7),
+    aes(
+      y= CORR,
+      colour = "CORR"
+    ),
+    size = 2) +
+  geom_point(
+    data = rxn_barrier_data %>%
+      filter(cardinal_number > 2, cardinal_number < 7),
+    aes(
+      y= SCF,
+      colour = "SCF"
+    ),
+    size = 2) +
+  geom_point(
+    data = rxn_barrier_data %>%
+      filter(cardinal_number > 2),
+    aes(
+      y= TOTAL,
+      colour = "TOTAL"
+    ),
+    size = 2
+    ) +
+  geom_point(
+    data = rxn_barrier_data %>%
+      filter(is.infinite(cardinal_number)),
+    aes(
+      y= TOTAL,
+      colour = "TOTAL",
+      shape = "EP3"
+    ),
+    size = 2
+    ) +
+  geom_smooth(
+    data = rxn_barrier_data %>%
+      filter(cardinal_number == 3 | cardinal_number == 4),
+    aes(
+      y = extrapolate_CORR(cardinal_number, CBS_CORR, QZ_CORR),
+      group = Method,
+      colour = "CORR",
+      linetype = "Extrapolation"
+    ),
+    method = "lm",
+    fullrange = TRUE,
+    formula = y ~ I(1/x^beta),
+    se = FALSE,
+    linewidth = 0.5,
+  ) +
+  geom_smooth(
+    data = rxn_barrier_data %>%
+      filter(cardinal_number == 3 | cardinal_number == 4),
+    aes(
+      y = extrapolate_SCF(cardinal_number, CBS_SCF, QZ_SCF),
+      group = Method,
+      colour = "SCF",
+      linetype = "Extrapolation"
+    ),
+    method = "lm",
+    fullrange = TRUE,
+    formula = y ~ exp(-alpha*sqrt(x)),
+    se = FALSE,
+    linewidth = 0.5
+  ) +
+  geom_smooth(
+    data = rxn_barrier_data %>%
+      filter(cardinal_number == 3 | cardinal_number == 4),
+    aes(
+      y = extrapolate_both(cardinal_number, CBS_CORR, QZ_CORR, CBS_SCF, QZ_SCF),
+      group = Method,
+      colour = "TOTAL",
+      linetype = "Extrapolation"
+    ),
+    method = "lm",
+    fullrange = TRUE,
+    formula = y ~ exp(-alpha*sqrt(x))+I(1/x^beta),
+    se = FALSE,
+    linewidth = 0.5
+  ) +
+  geom_hline(
+    aes(
+      yintercept = 0
+    ),
+    colour = "black",
+    linetype = 1,
+    linewidth = 0.25
+  ) +
+  
+  geom_hline(
+    aes(
+      yintercept = CBS_CORR,
+      colour = "CORR",
+      linetype = "CBS Limit"
+    )
+  ) +
+  geom_hline(
+    aes(
+      yintercept = CBS_SCF,
+      colour = "SCF",
+      linetype = "CBS Limit"
+    )
+  ) +
+  geom_hline(
+    aes(
+      yintercept = CBS_SCF + CBS_CORR,
+      colour = "TOTAL",
+      linetype = "CBS Limit"
+    )
+  ) +
+  geom_segment(
+    aes(
+      y = SCF + CORR,
+      yend = SCF + CORR + correction,
+      colour = "Correction",
+      linetype = "Correction"
+    ),
+    arrow = arrow(
+      type = "closed",
+      length = unit(2, "pt")
+    ),
+    linewidth = 1
+  )+
+  geom_segment(
+    aes(
+      y = CORR -  deviation,
+      yend = CORR ,
+      colour = "Correction",
+      linetype = "Correction"
+    ),
+    arrow = arrow(
+      type = "closed",
+      length = unit(2, "pt")
+    ),
+    linewidth = 1
+  )+
+  scale_x_continuous(
+    name = "Cardinal Number",
+    oob = scales::squish_infinite,
+    limits = c(2,5)
+    
+  ) +
+  scale_y_continuous(
+    name = "ΔE",
+    breaks = seq(-4, 30, 2),
+  )+
+  scale_color_locuszoom(
+    name = "Energy Component",
+    labels = c(
+      "CORR" = "ΔE<sub>corr</sub>",
+      "SCF" = "ΔE<sub>HF</sub>",
+      "TOTAL" = "ΔE<sub>HF</sub>+ΔE<sub>corr</sub>",
+      "Correction" = "ΔΔE<sup>DLPNO</sup>"
+    ),
+    limits = c(
+      "SCF",
+      "CORR",
+      "TOTAL",
+      "Correction"
+    )
+  )+
+  scale_linetype_manual(
+    values = c(
+      "Extrapolation" = 1,
+      "CBS Limit" = 2,
+      "Correction" = 1
+    ),
+  ) +
+  scale_shape(
+    name = "Method",
+    limits = c(
+      "CCSD(T)",
+      "DLPNO-CCSD(T)",
+      "EP3" = "EP3"
+    )
+  ) +
+  guides(
+    colour = guide_legend(
+      name = "Energy Component",
+    ),
+    shape = guide_legend(
+      name = "Method",
+    ),
+    linetype = guide_none(),
+  )+
+    facet_wrap(
+     ~Source, 
+     nrow = 1,
+    ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,0,0)
+  )+
+  theme(
+    legend.title = element_text(
+      hjust = 0
+    ),
+    legend.title.position = "top",
+    legend.text = element_markdown(
+      margin = margin(t = 3, b = 3)
+    ),
+    strip.placement = "inside",
+    strip.text.x.top = element_markdown(
+      angle = 0,
+      hjust = 0.5
+    ),
+    panel.spacing.x = unit(5, "mm"),
+    panel.grid.minor.x = element_blank(),
+  )
+
+plot
+
+ggsave(
+  extrapolate_barrier_plot_path,
+  plot,
+  height = unit(8, "cm"), 
+  width = unit(15.92, "cm"),
+  dpi = 600
+)
+
+```
+
+## DFT
+
+### Import Properties
+
+```{r import DFT Properies}
+
+DFT_energies <- tibble()
+
+for (i in 1:length(critical_points$name)) {
+  for (j in 1:length(functionals)) {
+    for (k in 1:length(basis_sets)) {
+      path <- paste0(
+        DFT_data_dir,
+        critical_points$name[i],
+        "_",
+        functionals[j],
+        "_",
+        basis_sets[k],
+        ".property.json"
+      )
+      
+      json <- read_json(path)
+      
+      row <- tibble(
+        "Source" = critical_points$name[i],
+        "Functional" = functionals[j],
+        "Basis Set" = basis_sets[k],
+        "Critical Point" = critical_points$critical_point[i],
+        "SCF_ENERGY" = json[["Geometry_1"]][["SCF_Energy"]][["SCF_ENERGY"]],
+        "EEXCHANGE" = json[["Geometry_1"]][["DFT_Energy"]][["EEXCHANGE"]],
+        "ECORR" = json[["Geometry_1"]][["DFT_Energy"]][["ECORR"]],
+        "ECNL" = json[["Geometry_1"]][["DFT_Energy"]][["ECNL"]],
+        "EXC" = json[["Geometry_1"]][["DFT_Energy"]][["EXC"]],
+        "FINALEN" = json[["Geometry_1"]][["DFT_Energy"]][["FINALEN"]],
+        "MP2CORR" = json[["Geometry_1"]][["MP2_Energies"]][["CORRENERGY"]],
+        "MP2TOTALENERGY" = json[["Geometry_1"]][["MP2_Energies"]][["TOTALENERGY"]],
+        "VDW" = json[["Geometry_1"]][["VdW_Correction"]][["VDW"]],
+        "TOTALENERGY" = json[["Geometry_1"]][["Calculation_Info"]][["TOTALENERGY"]]
+      ) %>%
+        mutate(
+          Functional = gsub(
+            "_",
+            "-",
+            Functional
+          )
+        )
+      
+      DFT_energies <- DFT_energies %>%
+        bind_rows(row)
+    }
+  }
+}
+
+DFT_energies <- DFT_energies %>% mutate(
+    Source = case_match(
+      Source,
+      "anti-exo" ~ "<i>anti-exo</i>",
+      "syn-exo" ~ "<i>syn-exo</i>" ,
+      "anti-endo" ~ "<i>anti-endo</i>",
+      "syn-endo" ~ "<i>syn-endo</i>",
+      "transG_g-exo" ~ "<i>trans</i>-G<sub>γ</sub>",
+      "transG_g-endo" ~ "<i>trans</i>-<sup>γ</sup>G",
+      "cisD_g-exo" ~ "<i>cis</i>-D<sub>γ</sub>",
+      "cisA_g-endo" ~ "<i>cis</i>-<sup>γ</sup>A",
+      .default = Source
+    )
+  )
+
+DFT_energies <- DFT_energies %>% 
+  pivot_longer(
+    cols = SCF_ENERGY:MP2TOTALENERGY,
+    names_to = "Component",
+    values_to = "Energy"
+  )
+
+dft_reference <- DFT_energies %>% 
+  filter(
+    Source == "<i>trans</i>-G<sub>γ</sub>"
+    ) %>%
+  rename("Reference Energy" = Energy) %>%
+  select(!Source)
+
+DFT_energies <- DFT_energies %>% 
+  left_join(
+    dft_reference,
+    by = c(
+      "Functional",
+      "Basis Set",
+      "Component"
+      )
+    ) %>%
+  mutate(
+    `Relative Energy` = (Energy - `Reference Energy`)*627.5094740631, 
+  Source = factor(
+      Source,
+      levels = 
+        rev(c(
+          "<i>trans</i>-G<sub>γ</sub>",
+          "<i>trans</i>-<sup>γ</sup>G",
+          "<i>cis</i>-D<sub>γ</sub>",
+          "<i>cis</i>-<sup>γ</sup>A",
+          "<i>anti-exo</i>",
+          "<i>syn-exo</i>",
+          "<i>anti-endo</i>",
+          "<i>syn-endo</i>"
+        )
+      
+    ) )
+  )
+
+
+rm(
+  json,
+  row
+  )
+
+
+```
+
+### Plot DFT error
+
+```{r Plot DFT error}
+
+DFT_Error <- DFT_energies %>%
+  filter(
+    Component == "TOTALENERGY"
+  ) %>%
+  left_join(
+    CBS_Energies,
+    by = c(
+      "Source"
+      )
+  ) %>%
+  mutate(
+   Error =  `Relative Energy`- CBS_REFERENCE_ENERGY
+  )
+
+
+plot <- DFT_Error %>%
+  pivot_wider(
+    id_cols = Source | Functional | `Critical Point`,
+    names_from = `Basis Set`,
+    values_from = Error
+  ) %>%
+  mutate(
+    Source = factor(
+      Source,
+      levels = 
+        c(
+          "<i>trans</i>-G<sub>γ</sub>",
+          "<i>trans</i>-<sup>γ</sup>G",
+          "<i>cis</i>-D<sub>γ</sub>",
+          "<i>cis</i>-<sup>γ</sup>A",
+          "<i>anti-exo</i>",
+          "<i>syn-exo</i>",
+          "<i>anti-endo</i>",
+          "<i>syn-endo</i>"
+        )
+      
+    ) ,
+    Functional = case_match(
+      Functional,
+      "r2SCAN-D3BJ" ~ "r<sup>2</sup>SCAN-D3(BJ).mGGA",
+      "B97M-V" ~ "B97M-V.mGGA",
+      "B97M-D4" ~ "B97M-D4.mGGA",
+      "PBE0-D3BJ" ~ "PBE0-D3BJ.Hybrid GGA",
+      "M062X-D3ZERO" ~ "M06-2X-D3(0).Hybrid mGGA",
+      "wB97X-D4rev" ~ "<i>ω</i>B97X-D4rev.Range-Separated Hybrid",
+      "wB97X-V" ~ "<i>ω</i>B97X-V.Range-Separated Hybrid",
+      "wB97M-D4rev" ~ "<i>ω</i>B97M-D4rev.Range-Separated Hybrid",
+      "wB97M-V" ~ "<i>ω</i>B97M-V.Range-Separated Hybrid",
+      "DSD-BLYP-D3BJ" ~ "DSD-BLYP-D3(0).Double Hybrid"
+    ),
+    Functional = factor(
+      Functional, 
+      levels = c(
+        "r<sup>2</sup>SCAN-D3(BJ).mGGA",
+        "B97M-D4.mGGA",
+        "B97M-V.mGGA",
+        "PBE0-D3BJ.Hybrid GGA",
+        "M06-2X-D3(0).Hybrid mGGA",
+        "<i>ω</i>B97X-D4rev.Range-Separated Hybrid",
+        "<i>ω</i>B97X-V.Range-Separated Hybrid",
+        "<i>ω</i>B97M-D4rev.Range-Separated Hybrid",
+        "<i>ω</i>B97M-V.Range-Separated Hybrid",
+        "DSD-BLYP-D3(0).Double Hybrid"
+      )
+    )
+  ) %>%
+  filter(
+    !grepl("D4rev",Functional)
+  ) %>%
+  ggplot(
+    aes(
+      x = Functional,
+      y = `def2-QZVPP`,
+      fill = Functional
+    )
+  ) +
+  geom_col(
+  ) +
+  scale_x_discrete(
+    name = "Conformation",
+    limits = ~rev(.x),
+    expand = expansion(add = c(1, 1))
+  )+
+  scale_y_continuous(
+    name = "ΔE<sub>DFT/def2-QZVPP</sub> - ΔE<sub>CCSD(T)/CBS</sub>",
+    breaks = seq(-3, 3, 0.5)
+  ) +
+  #scale_fill_locuszoom()+
+  scale_fill_viridis_d(
+    option = "H"
+  )+
+  coord_flip() +
+  guides(
+    fill = guide_legend_group(
+      key = key_group_split(sep = "\\.", reverse = TRUE),
+      position = "right",
+    ),
+    y = guide_axis(
+    )
+  )+
+  facet_wrap(
+    ~Source,
+    ncol = 1,
+    strip.position = "left",
+    axes = "all_x",
+    axis.labels = "margins"
+  ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    #axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,0,0)
+  )+ 
+  theme(
+    panel.spacing = unit(-1, "mm"),
+    axis.text.y = element_blank(),
+    strip.text.y.left = element_markdown(
+      hjust = 1,
+      vjust = 0.5,
+      angle = 0
+    ),
+    panel.grid.major.y = element_blank(),
+    axis.line.x = element_line(
+      linewidth = 0.25
+    ),
+    legend.justification = c(0,0.5),
+    legend.title.position = "left",
+    legend.title = element_text(
+      angle = 90,
+      hjust = 0.5,
+      size = 10*.pt
+    ),
+    legendry.legend.subtitle.position = "top",
+    legendry.legend.subtitle = element_text(
+      angle = 0,
+      hjust = 0,
+      size = 8*.pt
+    ),
+    legend.text = element_markdown(
+      angle = 0,
+      hjust = 0
+    ),
+    legend.text.position = "right",
+    axis.title.x = element_markdown(
+      family = "serif"
+    )
+  )
+
+plot
+
+ggsave(
+  DFT_error_plot_path,
+  plot,
+  height = unit(10, "cm"), 
+  width = unit(15.92, "cm"),
+  dpi = 600
+)
+
+
+```
+
+
+### Basis set dependance 
+
+#### Plot reaction energy basis set dependance
+
+```{r Plot reaction energy basis set dependance}
+
+
+plot <- DFT_Error %>%
+  mutate(
+    Source = factor(
+      Source,
+      levels = 
+        c(
+          "<i>trans</i>-G<sub>γ</sub>",
+          "<i>trans</i>-<sup>γ</sup>G",
+          "<i>cis</i>-D<sub>γ</sub>",
+          "<i>cis</i>-<sup>γ</sup>A",
+          "<i>anti-endo</i>",
+          "<i>syn-endo</i>",
+          "<i>anti-exo</i>",
+          "<i>syn-exo</i>"
+        )
+      
+    ),
+    Functional = case_match(
+      Functional,
+      "r2SCAN-D3BJ" ~ "r<sup>2</sup>SCAN-D3(BJ).mGGA",
+      "B97M-D4" ~ "B97M-D4.mGGA",
+      "B97M-V" ~ "B97M-V.mGGA",
+      "PBE0-D3BJ" ~ "PBE0-D3BJ.Hybrid GGA",
+      "M062X-D3ZERO" ~ "M06-2X-D3(0).Hybrid mGGA",
+      "wB97X-D4rev" ~ "<i>ω</i>B97X-D4rev.Range-Separated Hybrid",
+      "wB97X-V" ~ "<i>ω</i>B97X-V.Range-Separated Hybrid",
+      "wB97M-D4rev" ~ "<i>ω</i>B97M-D4rev.Range-Separated Hybrid",
+      "wB97M-V" ~ "<i>ω</i>B97M-V.Range-Separated Hybrid",
+      "DSD-BLYP-D3BJ" ~ "DSD-BLYP-D3(0).Double Hybrid"
+    ),
+    Functional = factor(
+      Functional, 
+      levels = c(
+        "r<sup>2</sup>SCAN-D3(BJ).mGGA",
+        "B97M-D4.mGGA",
+        "B97M-V.mGGA",
+        "PBE0-D3BJ.Hybrid GGA",
+        "M06-2X-D3(0).Hybrid mGGA",
+        "<i>ω</i>B97X-D4rev.Range-Separated Hybrid",
+        "<i>ω</i>B97X-V.Range-Separated Hybrid",
+        "<i>ω</i>B97M-D4rev.Range-Separated Hybrid",
+        "<i>ω</i>B97M-V.Range-Separated Hybrid",
+        "DSD-BLYP-D3(0).Double Hybrid"
+      )
+    ),
+  ) %>%
+  filter(
+    !grepl("D4",Functional),
+    `Critical Point` == "Minimum"
+  ) %>% 
+  ggplot(
+    aes(
+      x = `Basis Set`,
+      y = Error,
+      colour = Functional,
+       group = Functional
+    )
+  ) +
+  geom_hline(
+    aes(yintercept = 0),
+    colour = "black",
+    linewidth = 0.5,
+    alpha = 0.5
+  ) +
+  geom_point(
+    size = 3
+  ) +
+  geom_line(
+    linewidth = 1.5
+  ) +
+  scale_colour_viridis_d(
+    option = "H"
+  ) +
+  guides(
+    colour = guide_legend_group(
+      key = key_group_split(sep = "\\.", reverse = TRUE)
+    ),
+  )+
+  scale_x_discrete(
+    name = "Cardinal Number",
+    limits = c(
+      "def2-TZVPP",
+      "def2-QZVPP"
+      ),
+    labels = c(
+      "def2-TZVPP" = "3",
+      "def2-QZVPP" = "4"
+    ),
+  )+
+  scale_y_continuous(
+    name = expression(
+        Delta*E[DFT]-Delta*E[CCSD(T)/CBS]
+      ),
+    breaks = seq(-3, 3, 0.2),
+  ) +
+  facet_wrap(
+    ~Source,
+    nrow = 1,
+    axes = "all_y",
+    axis.labels = "margins"
+  ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,0,0)
+  ) +
+  theme(
+    axis.text.y = element_markdown(),
+    axis.line.y = element_line(
+      linewidth = 0.25
+    ),
+    panel.grid.major.x = element_blank(),
+    strip.placement = "outside",
+    panel.spacing = unit(-2, "mm"),
+    strip.text.x.top = element_markdown(
+      angle = 0,
+      vjust = 0,
+      hjust = 0.5,
+    ),
+    legend.justification = c(0,0.5),
+    legend.title.position = "left",
+    legend.title = element_text(
+      angle = 90,
+      hjust = 0.5,
+      size = 10*.pt
+    ),
+    legendry.legend.subtitle.position = "top",
+    legendry.legend.subtitle = element_text(
+      angle = 0,
+      hjust = 0,
+      size = 8*.pt
+    ),
+    legend.text = element_markdown(
+      angle = 0,
+      hjust = 0
+    ),
+    legend.text.position = "right",
+  )
+
+plot
+  
+ggsave(
+  DFT_rxn_basis_set_plot_path,
+  plot,
+  height = unit(8, "cm"), 
+  width = unit(15.92, "cm")
+)
+
+
+```
+
+#### Plot barrier height basis set dependance
+
+
+```{r Plot barrier height basis set dependance}
+
+plot <- DFT_Error %>%
+mutate(
+    Source = factor(
+      Source,
+      levels = 
+        c(
+          "<i>trans</i>-G<sub>γ</sub>",
+          "<i>trans</i>-<sup>γ</sup>G",
+          "<i>cis</i>-D<sub>γ</sub>",
+          "<i>cis</i>-<sup>γ</sup>A",
+          "<i>anti-endo</i>",
+          "<i>syn-endo</i>",
+          "<i>anti-exo</i>",
+          "<i>syn-exo</i>"
+        )
+      
+    ),
+
+    Functional = case_match(
+      Functional,
+      "r2SCAN-D3BJ" ~ "r<sup>2</sup>SCAN-D3(BJ).mGGA",
+      "B97M-D4" ~ "B97M-D4.mGGA",
+      "B97M-V" ~ "B97M-V.mGGA",
+      "PBE0-D3BJ" ~ "PBE0-D3BJ.Hybrid GGA",
+      "M062X-D3ZERO" ~ "M06-2X-D3(0).Hybrid mGGA",
+      "wB97X-D4rev" ~ "<i>ω</i>B97X-D4rev.Range-Separated Hybrid",
+      "wB97X-V" ~ "<i>ω</i>B97X-V.Range-Separated Hybrid",
+      "wB97M-D4rev" ~ "<i>ω</i>B97M-D4rev.Range-Separated Hybrid",
+      "wB97M-V" ~ "<i>ω</i>B97M-V.Range-Separated Hybrid",
+      "DSD-BLYP-D3BJ" ~ "DSD-BLYP-D3(0).Double Hybrid"
+    ),
+    Functional = factor(
+      Functional, 
+      levels = c(
+        "r<sup>2</sup>SCAN-D3(BJ).mGGA",
+        "B97M-D4.mGGA",
+        "B97M-V.mGGA",
+        "PBE0-D3BJ.Hybrid GGA",
+        "M06-2X-D3(0).Hybrid mGGA",
+        "<i>ω</i>B97X-D4rev.Range-Separated Hybrid",
+        "<i>ω</i>B97X-V.Range-Separated Hybrid",
+        "<i>ω</i>B97M-D4rev.Range-Separated Hybrid",
+        "<i>ω</i>B97M-V.Range-Separated Hybrid",
+        "DSD-BLYP-D3(0).Double Hybrid"
+      )
+    ),
+  ) %>%
+  filter(
+    !grepl("D4",Functional),
+    `Critical Point` == "TS"
+  ) %>% 
+  ggplot(
+    aes(
+      x = `Basis Set`,
+      y = Error,
+      colour = Functional,
+       group = Functional
+    )
+  ) +
+  geom_hline(
+    aes(yintercept = 0),
+    colour = "black",
+    linewidth = 0.5,
+    alpha = 0.5
+  ) +
+  geom_point(
+    size = 3
+  ) +
+  geom_line(
+    linewidth = 1.5
+  ) +
+  scale_colour_viridis_d(
+    option = "H"
+  ) +
+  guides(
+    colour = guide_legend_group(
+      key = key_group_split(sep = "\\.", reverse = TRUE)
+    ),
+  )+
+  scale_x_discrete(
+    name = "Cardinal Number",
+    limits = c(
+      "def2-TZVPP",
+      "def2-QZVPP"
+      ),
+    labels = c(
+      "def2-TZVPP" = "3",
+      "def2-QZVPP" = "4"
+    ),
+  )+
+  scale_y_continuous(
+    name = expression(
+        Delta*E[DFT]-Delta*E[CCSD(T)/CBS]
+      ),
+    breaks = seq(-3, 3, 0.2),
+  ) +
+  facet_wrap(
+    ~Source,
+    nrow = 1,
+    axes = "all_y",
+    axis.labels = "margins"
+  ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,0,0)
+  ) +
+  theme(
+    axis.text.y = element_markdown(),
+    axis.line.y = element_line(
+      linewidth = 0.25
+    ),
+    panel.grid.major.x = element_blank(),
+    strip.placement = "outside",
+    panel.spacing = unit(-2, "mm"),
+    strip.text.x.top = element_markdown(
+      angle = 0,
+      vjust = 0,
+      hjust = 0.5,
+    ),
+    legend.justification = c(0,0.5),
+    legend.title.position = "left",
+    legend.title = element_text(
+      angle = 90,
+      hjust = 0.5,
+      size = 10*.pt
+    ),
+    legendry.legend.subtitle.position = "top",
+    legendry.legend.subtitle = element_text(
+      angle = 0,
+      hjust = 0,
+      size = 8*.pt
+    ),
+    legend.text = element_markdown(
+      angle = 0,
+      hjust = 0
+    ),
+    legend.text.position = "right",
+  )
+
+plot
+
+ggsave(
+  DFT_barrier_basis_set_plot_path,
+  plot,
+  height = unit(10, "cm"), 
+  width = unit(15.92, "cm")
+)
+
+
+```
+
+## Dispersion Correction
+
+### Prepare data
+
+```{r  Dispersion Correction }
+
+no_correction <- DFT_energies %>%
+  filter(
+    !grepl("V$", Functional)
+  ) %>%
+  separate_wider_regex(
+    cols = Functional,
+    patterns = c(Functional="^.*", "-", Correction=".*$")
+  ) %>%
+  select(!Correction)%>%
+  mutate(Functional = paste(Functional, "None", sep = "-")) %>%
+  pivot_wider(
+    id_cols = Source | Functional | `Basis Set`,
+    names_from = Component,
+    values_from = Energy
+  ) %>%
+  mutate(
+    VDW = 0,
+    TOTALENERGY = FINALEN
+  ) %>%
+  pivot_longer(
+    cols = SCF_ENERGY:MP2TOTALENERGY,
+    names_to = "Component",
+    values_to = "Energy"
+  )
+
+no_correction_reference <- no_correction %>%
+  filter(
+    Source == "<i>trans</i>-G<sub>γ</sub>"
+  ) %>%
+  rename(`Reference Energy` = Energy) %>%
+  select(
+    !Source
+  )
+
+no_correction <- no_correction %>%
+  left_join(
+    no_correction_reference,
+    by = c(
+      "Functional",
+      "Basis Set",
+      "Component"
+    )
+  ) %>%
+  mutate(
+    `Relative Energy` = (Energy - `Reference Energy`)*627.5094740631,
+  )
+
+
+dispersion_data <- DFT_energies %>%
+  bind_rows(no_correction) %>% 
+  filter(
+    `Basis Set` == "def2-QZVPP",
+    Component == "TOTALENERGY"
+    ) %>%
+  left_join(
+    CBS_Energies,
+    by = c(
+      "Source"
+      )
+  ) %>%
+  mutate(
+   Error =   `Relative Energy`-CBS_REFERENCE_ENERGY,
+    Source = factor(
+      Source,
+      levels = 
+        c(
+          "<i>trans</i>-G<sub>γ</sub>",
+          "<i>trans</i>-<sup>γ</sup>G",
+          "<i>cis</i>-D<sub>γ</sub>",
+          "<i>cis</i>-<sup>γ</sup>A",
+          "<i>anti-endo</i>",
+          "<i>syn-endo</i>",
+          "<i>anti-exo</i>",
+          "<i>syn-exo</i>"
+        )
+    )
+  ) %>%
+  separate_wider_regex(
+    cols = Functional,
+    patterns = c(Functional="^.*", "-", Correction=".*$")
+  ) %>%
+  mutate(
+    Correction = case_match(
+      Correction,
+      "D3BJ" ~ "DFT-D",
+      "D4" ~ "DFT-D",
+      "D4rev" ~ "DFT-D",
+      "D3ZERO" ~ "DFT-D",
+      "V" ~ "DFT-NL (VV10)",
+      .default = "None"
+    ),
+    Functional = case_match(
+      Functional,
+      "r2SCAN" ~ "r<sup>2</sup>SCAN",
+      "B97M" ~ "B97M",
+      "PBE0" ~ "PBE0",
+      "M062X" ~ "M06-2X",
+      "wB97X" ~ "<i>ω</i>B97X",
+      "wB97M" ~ "<i>ω</i>B97M",
+      "DSD-BLYP" ~ "DSD-BLYP"
+    )
+  ) %>%
+  mutate(
+    Functional = factor(
+      Functional, 
+      levels = c(
+      "r<sup>2</sup>SCAN",
+      "B97M",
+      "PBE0",
+      "M06-2X",
+      "<i>ω</i>B97X",
+      "<i>ω</i>B97M",
+      "DSD-BLYP"
+      )
+    ),
+    Correction = factor(
+      Correction,
+      levels = c(
+      "None",
+      "DFT-D",
+      "DFT-NL (VV10)"
+    )
+    )
+  ) 
+
+
+
+None <- dispersion_data %>%
+  filter(
+    `Basis Set` == "def2-QZVPP",
+    Correction == "None"
+         ) %>%
+  select(Source, Functional, `Basis Set`, Error) %>%
+  rename(None_error = Error)
+
+dispersion_data <- dispersion_data %>%
+  left_join(None)
+```
+
+### Plot reaction energy dispersion correction
+
+```{r Plot reaction energy dispersion correction}
+
+plot <- dispersion_data %>% 
+  filter(`Critical Point` == "Minimum") %>%
+  ggplot(
+    aes(
+      x = Functional,
+      y = Error,
+      fill = Correction
+    )
+  ) +
+  geom_col(
+    position = position_dodge2(
+      preserve = "single",
+       reverse = FALSE),
+    width = 0.5,
+  )+
+  geom_hline(
+    aes(yintercept = 0),
+    colour = "black",
+    linewidth = 0.5,
+    alpha = 0.5
+  ) +
+  scale_fill_locuszoom(
+    name = "Dispersion Correction"
+   ) +
+  guides(
+    fill = guide_legend(
+      position = "top",
+    )
+    )+
+  scale_y_continuous(
+    name = expression(
+        Delta*E[DFT/def2-QZVPP]-Delta*E[CCSD(T)/CBS]
+      ),
+    breaks = seq(-3, 3, 0.2)
+  ) +
+    facet_wrap(
+    ~Source,
+    nrow = 1,
+    axes = "all_y",
+    axis.labels = "margins"
+  ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    #axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,0,0)
+  )+
+  theme(
+    axis.line.y = element_line(
+      linewidth = 0.25
+    ),
+    panel.spacing = unit(-2, "mm"),
+    strip.text = element_markdown(
+      hjust = 0.5
+    ),
+    axis.text.x = element_markdown(
+      angle = -90,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    panel.grid.major.x = element_blank(),
+    legend.title.position = "top",
+    legend.justification = c(0, 1),
+  )
+
+plot
+
+ggsave(
+  rxn_dispersion_plot_path,
+  plot,
+  height = unit(10, "cm"), 
+  width = unit(15.92, "cm")
+)
+
+```
+### Plot barrier height dispersion corrections
+
+```{r Plot barrier height dispersion corrections}
+
+plot <- dispersion_data %>% 
+  filter(`Critical Point` == "TS") %>%
+  mutate(
+    Source = factor(
+      Source,
+      levels = 
+        c(
+          "<i>anti-exo</i>",
+          "<i>syn-exo</i>",
+          "<i>anti-endo</i>",
+          "<i>syn-endo</i>"
+      )
+    )
+  ) %>%
+
+  ggplot(
+    aes(
+      x = Functional,
+      y = Error,
+      fill = Correction
+    )
+  ) +
+  geom_col(
+    position = position_dodge2(
+      preserve = "single",
+       reverse = FALSE),
+    width = 0.5,
+  )+
+  geom_hline(
+    aes(yintercept = 0),
+    colour = "black",
+    linewidth = 0.5,
+    alpha = 0.5
+  ) +
+  scale_fill_locuszoom(
+    name = "Dispersion Correction"
+   ) +
+  guides(
+    fill = guide_legend(
+      position = "top",
+    )
+    )+
+  scale_y_continuous(
+    name = expression(
+        Delta*E[DFT/def2-QZVPP]-Delta*E[CCSD(T)/CBS]
+      ),
+    breaks = seq(-3, 3, 0.2)
+  ) +
+    facet_wrap(
+    ~Source,
+    nrow = 1,
+    axes = "all_y",
+    axis.labels = "margins"
+  ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    #axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,0,0)
+  )+
+  theme(
+    axis.line.y = element_line(
+      linewidth = 0.25
+    ),
+    panel.spacing = unit(-2, "mm"),
+    strip.text = element_markdown(
+      hjust = 0.5
+    ),
+    axis.text.x = element_markdown(
+      angle = -90,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    panel.grid.major.x = element_blank(),
+    legend.title.position = "top",
+    legend.justification = c(0, 1),
+  )
+
+plot
+
+ggsave(
+  barrier_dispersion_plot_path,
+  plot,
+  height = unit(15.92, "cm"), 
+  width = unit(15.92, "cm")
+)
+
+```
+

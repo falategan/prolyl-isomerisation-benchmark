@@ -1,0 +1,218 @@
+---
+title: "High Resolution Transition State Scans"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+## Load required libraries
+
+```{r import libraries}
+
+library(tidyverse)
+library(hrbrthemes)
+
+```
+
+## User-defined file paths
+
+```{r Define paths}
+
+hi_res_scan_1_energy_path <- "../Data/fr_18441_hi-res_scan.relaxscanact.dat"
+hi_res_scan_2_energy_path <- "../Data/rf_10748_hi-res_scan.relaxscanact.dat"
+
+```
+
+
+# Execute program
+
+## Import data
+
+
+```{r import data}
+
+
+scan_1_energies <- read_table(
+  hi_res_scan_1_energy_path,
+  col_names = c(
+    "Omega",
+    "Eta",
+    "Energy"
+    ),
+  col_types = "ddd_",
+  n_max = 50000
+  ) %>%
+  mutate(
+    Eta = 180-(Eta %% 360),
+    index = row_number()
+  )
+
+
+scan_2_energies <- read_table(
+  hi_res_scan_2_energy_path,
+  col_names = c(
+    "Omega",
+    "Eta",
+    "Energy"
+    ),
+  col_types = "ddd_",
+  n_max = 50000
+  )  %>%
+  mutate(
+    Eta = 180-(Eta %% 360),
+    index = row_number()
+  )
+
+
+```
+
+
+## Plot
+
+```{r plot} 
+
+plot1 <- scan_1_energies %>% 
+  ggplot(
+    aes( 
+      x = Omega,
+      y = Eta,
+      z = Energy,
+      fill = Energy,
+      label = index
+      )
+  ) +
+  geom_raster() +
+  geom_contour(
+     colour = "black",
+     bins = 64
+   ) +
+  geom_line(
+    data = scan_1_energies %>% 
+      filter( 
+        index == 268 | 
+          index == 288 |  
+          index == 308
+        ),
+    colour = "red"
+  ) +
+    geom_text(
+    colour = "white"
+  )+
+  scale_fill_viridis_c(
+    guide = guide_colourbar(
+      position = "bottom",
+      direction = "horizontal",
+      )
+    ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_face = "italic",
+    strip_text_family = "serif",
+    axis_title_face = "italic",
+    axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,5,0, unit = "mm")
+  ) +
+  theme(
+    panel.spacing.x = unit(2, "mm"),
+    panel.spacing.y = unit(2, "mm"),
+    legend.title.position = "bottom",
+    legend.title = element_text(
+      hjust = 0.5
+      ),
+    legend.text = element_text(
+      hjust = 0,
+      angle = -90,
+      vjust = 0.5
+    ),
+    legend.key.width = unit(50, "mm"),
+    legend.key.height = unit(10, "mm"),
+    legend.ticks = element_line(
+      colour = "black"
+    )) +
+  xlab("ω") +
+  ylab("η")
+
+plot1
+
+# Previous geometry: 268
+# TS Candidate: 288
+# Next geometry: 308
+
+plot2 <- scan_2_energies %>% 
+  ggplot(
+    aes( 
+      x = Omega,
+      y = Eta,
+      z = Energy,
+      fill = Energy,
+      label = index
+      )
+  ) +
+  geom_raster() +
+   geom_contour(
+     colour = "black",
+     bins = 64
+   ) +
+  geom_line(
+    data = scan_2_energies %>% 
+      filter( 
+        index == 263 | 
+          index == 284 |  
+          index == 305
+        ),
+    colour = "red"
+  ) +
+  geom_text(
+    colour = "white"
+  )+
+  scale_fill_viridis_c(
+    guide = guide_colourbar(
+      position = "bottom",
+      direction = "horizontal",
+      )
+    ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_face = "italic",
+    strip_text_family = "serif",
+    axis_title_face = "italic",
+    axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,5,0, unit = "mm")
+  ) +
+  theme(
+    panel.spacing.x = unit(2, "mm"),
+    panel.spacing.y = unit(2, "mm"),
+    legend.title.position = "bottom",
+    legend.title = element_text(
+      hjust = 0.5
+      ),
+    legend.text = element_text(
+      hjust = 0,
+      angle = -90,
+      vjust = 0.5
+    ),
+    legend.key.width = unit(50, "mm"),
+    legend.key.height = unit(10, "mm"),
+    legend.ticks = element_line(
+      colour = "black"
+    )) +
+  xlab("ω") +
+  ylab("η")
+
+plot2
+
+# Previous geometry: 263
+# TS Candidate: 284
+# Next geometry: 305
+
+```

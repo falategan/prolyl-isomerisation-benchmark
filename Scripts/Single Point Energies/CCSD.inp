@@ -1,0 +1,12 @@
+! ExtrapolateEP3(Ano,DLPNO-CCSD(T)) PAL8 TightSCF PrintGap
+
+%maxcore 20000
+
+%method
+	WriteJSONPropertyfile True
+	
+end
+
+%base "${name}"
+
+* xyzfile 0 1 ${input}

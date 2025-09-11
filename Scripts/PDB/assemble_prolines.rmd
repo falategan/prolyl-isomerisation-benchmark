@@ -1,0 +1,87 @@
+---
+title: "Assemble Prolines"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+## User-defined file paths
+
+```{r Define paths}
+
+proline_atom_path <- "../Data/proline_atoms.csv"
+
+output_path <- "../Data/proline_residues.csv"
+
+```
+
+## Load required libraries
+
+```{r import libraries}
+
+library(tidyverse)
+
+```
+
+# Execute programme
+
+## Load proline atomic coordinates
+
+```{r import prolines}
+
+proline_atoms <- read_csv(
+  file = proline_atom_path, 
+  n_max=5500000
+  ) %>%
+  distinct() %>%
+  mutate(
+    "Atom Name" = case_match(
+      `Atom Name`, 
+      "CA" ~ "C3",
+      "CB" ~ "C4",
+      "CG" ~ "C5",
+      "CD" ~ "C6",
+      "C" ~ "C7",
+      "N" ~ "N1",
+      "O" ~ "O2"
+      )
+    )
+
+filter <- proline_atoms %>% 
+  select(
+    !`Insertion Code` & !AltLoc
+    ) %>% drop_na()
+
+proline_atoms <- semi_join(proline_atoms, filter)
+
+```
+
+## Convert data to new format
+
+```{r pivot prolines}
+
+proline_residues <- proline_atoms %>% 
+  pivot_wider(
+    id_cols = `PDB ID` | `Chain ID` | `Residue Index` | `Insertion Code`| `AltLoc`, 
+    names_from = `Atom Name`, 
+    values_from = x | y | z,
+    values_fn = ~first(.x),
+    names_glue = "{`Atom Name`}.{.value}"
+    ) %>% 
+  distinct() 
+
+```
+
+## Export to CSV file
+
+```{r save prolines}
+
+proline_residues %>% 
+  write_csv(
+    output_path, 
+    na = ""
+    )
+
+```

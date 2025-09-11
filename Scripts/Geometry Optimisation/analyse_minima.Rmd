@@ -1,0 +1,212 @@
+---
+title: "Analyse Minima"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+## User-defined file paths
+
+```{r Define paths}
+
+input_paths <- tibble(
+  name = c(
+  "transG_g-endo",
+  "transG_g-exo",
+  "cisD_g-exo",
+  "cisA_g-endo"),
+  internal_coordinates = c(
+    "../Data/transG_g-endo.intl",
+    "../Data/transG_g-exo.intl",
+    "../Data/cisD_g-exo.intl",
+    "../Data/cisA_g-endo.intl"), 
+  properties = c(
+    "../Data/opt_minima_fwd_scan.940.property.json",
+    "../Data/opt_minima_fwd_scan.1524.property.json",
+    "../Data/opt_minima_fwd_scan.44007.property.json",
+    "../Data/opt_minima_fwd_scan.44678.property.json"
+  )
+)
+
+table_output_path <- "../Data/analyse_minima_table.csv"
+
+
+```
+
+## Load required libraries
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(hrbrthemes)
+library(cetcolor)
+library(jsonlite)
+
+```
+
+# Execute program
+
+## Import data
+
+```{r import data}
+
+geometries <- tibble()
+
+for (i in 1:length(input_paths$name)) {
+  
+  new_geometry <- read_csv(
+    input_paths$internal_coordinates[i]
+  ) %>%
+    mutate(
+      Source = input_paths$name[i],
+      LevelOfTheory = "r2SCAN-3c",
+      Solvent = "Gas Phase"
+      )
+  geometries <- geometries %>%
+    bind_rows(new_geometry)
+}
+
+
+```
+
+
+### Calculate Coordinates
+
+```{r coordinates}
+
+# Westhof
+geometries <- geometries %>%
+  mutate(
+    P = (-atan2(
+        (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5),
+        (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5) 
+      )*180/pi)%%360,
+    tau = 2/5*sqrt(
+      (
+        (
+          (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5)  
+          )^2
+        ) + (
+          (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5)  
+          )^2
+      )*180/pi,
+    eta = 180-(eta%%360),
+    Isomer = case_when(
+      abs(omega) < 45 ~ "Cis",
+      abs(omega) > 135 ~ "Trans",
+      omega > 0 ~ "Syn",
+      .default = "Anti"
+      ),
+    Cluster = case_when(
+      psi > 120 & phi > -100 ~ "P", 
+      psi > 90 ~ "B", 
+      psi > 30 & phi > -110 ~ "G", 
+      psi > 30 ~ "Z", 
+      psi > -75 & phi > -80 ~ "A", 
+      psi > -30 ~ "D", psi > -100 ~ "N"
+      ),
+    Pucker = case_when(
+      P < 54 | P > 342 ~ "γ-endo",
+      P < 234 & P > 162 ~ "γ-exo",
+      P < 180 ~ "N-endo",
+      .default = "N-exo"
+      ),
+    Pyramidality = case_when(
+      eta < -30 ~ "Exo",
+      eta > 30 ~ "Endo",
+      .default = "Planar"
+      ),
+    Name = paste(
+      Isomer, Pyramidality, Cluster, Pucker, 
+      sep = "-"
+      )
+    ) %>%
+  select(
+    Source, Name, omega, eta, psi, phi, P, tau
+    )
+
+
+
+```
+
+### Properties
+```{r import properties}
+
+minimum_properties <- tibble()
+
+for( i in 1:length(input_paths$name) ) {
+
+ property_json <- read_json(
+   input_paths$properties[i]
+   )
+ properties <- property_json[[length(property_json)]]
+ print(properties[["THERMOCHEMISTRY_Energies"]]$GeometryIndex)
+ row <- tibble(
+   Source = input_paths$name[i],
+   Iterations = properties[["SCF_Energy"]][["GeometryIndex"]],
+   `DFT Energy` = properties[["SCF_Energy"]][["SCF_ENERGY"]],
+   `Total Energy` = properties[["THERMOCHEMISTRY_Energies"]][["ELENERGY"]],
+   `Exchange Energy` = properties[["DFT_Energy"]][["EEXCHANGE"]],
+   `Correlation Energy` = properties[["DFT_Energy"]][["ECORR"]],
+   `VDW Correction` = properties[["VdW_Correction"]][["VDW"]],
+   Enthalpy = properties[["THERMOCHEMISTRY_Energies"]][["ENTHALPYH"]],
+   Entropy = properties[["THERMOCHEMISTRY_Energies"]][["ENTROPYS"]],
+   `Free Energy` = properties[["THERMOCHEMISTRY_Energies"]][["FREEENERGYG"]]
+ )
+ minimum_properties <- minimum_properties %>%
+   bind_rows(row)
+}  
+
+free_energy <- minimum_properties %>%
+  mutate(
+    `Free Energy` = (`Free Energy` - min(`Free Energy`))*627.5094740631
+    ) %>%
+  arrange(`Free Energy`) %>%
+  mutate(
+    `DFT Energy` = (`DFT Energy` - first(`DFT Energy`))*627.5094740631,
+    `Total Energy` = (`Total Energy` - first(`Total Energy`))*627.5094740631,
+    `Exchange Energy` = (`Exchange Energy` - first(`Exchange Energy`))*627.5094740631,
+    `Correlation Energy` = (`Correlation Energy` - first(`Correlation Energy`))*627.5094740631,
+    `VDW Correction` = (`VDW Correction` - first(`VDW Correction`))*627.5094740631,
+    Enthalpy = (Enthalpy - first(Enthalpy))*627.5094740631,
+    Entropy = (Entropy - first(Entropy))*627.5094740631,
+    )
+
+```
+
+## Export results
+
+```{r export table}
+
+minimum_table <- geometries %>%
+  left_join(
+    free_energy
+    ) %>%
+  arrange(`Free Energy`) 
+
+minimum_table %>%
+  write_csv(
+    table_output_path
+  )
+
+```

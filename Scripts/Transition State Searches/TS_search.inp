@@ -1,0 +1,14 @@
+!R2SCAN-3c OPTTS FREQ SlowConv TightOPT PAL16 MiniPrint PrintGap
+
+%method
+	WriteJSONPropertyfile True
+end
+
+%base "${name}"
+
+%geom 
+	MaxIter 500
+	TS_Mode {D 0 1 22 2}  end
+end
+
+* xyzfile 0 1 ${input}

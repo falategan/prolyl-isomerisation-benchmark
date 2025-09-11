@@ -1,0 +1,49 @@
+#!/bin/bash
+
+#PBS -l walltime=168:00:00
+#PBS -l select=1:ncpus=1:mem=1GB 
+#PBS -N get_internal
+#PBS -e get_internal.err 
+#PBS -o get_internal.out
+#PBS -m ae
+
+export PATH="/usr/bin/date:$PATH"
+export PATH="/usr/bin/bc:$PATH"
+export PATH="/usr/bin/rsync:$PATH"
+
+# create TMP
+start=$(date +%s.%N)
+umask 0077
+TMP=/scratch3/${PBS_JOBID}
+mkdir -p ${TMP}
+echo "Temporary work dir: ${TMP}"
+
+echo "Copying from ${PBS_O_WORKDIR}/ to ${TMP}/"
+rsync -vax "${PBS_O_WORKDIR}/" ${TMP}/
+cd ${TMP}/
+end=$(date +%s.%N)
+copytime=$( echo "$end - $start" | bc -l )
+echo "Copied to ${TMP} in ${copytime}s"
+
+
+# MY SCRIPT
+start=$(date +%s.%N)
+
+module load app/pytorch/1.13
+
+python3 ./csv2internal.py AcProNMe.csv AcProNMe_internal.config PDB_internal.csv
+
+end=$(date +%s.%N)
+runtime=$( echo "$end - $start" | bc -l )
+echo "Runtime: ${runtime}s"
+# END SCRIPT
+
+# copy back
+start=$(date +%s.%N)
+echo "Copying from ${TMP}/ to ${PBS_O_WORKDIR}/"
+rsync -vax "${TMP}/" ${PBS_O_WORKDIR}/
+[ $? -eq 0 ] && /bin/rm -rf ${TMP}
+end=$(date +%s.%N)
+copytime=$( echo "$end - $start" | bc -l )
+echo "Copied to ${PBS_O_WORKDIR} in ${copytime}s"
+

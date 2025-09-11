@@ -1,0 +1,156 @@
+---
+title: "Assemble AcProNMe"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+## User-defined file paths
+
+```{r Define paths}
+
+proline_residue_path <- "../Data/proline_residues.csv"
+
+acetyl_atom_path <- "../Data/acetyl_atoms.csv"
+
+amide_atom_path <- "../Data/amide_atoms.csv"
+
+methyl_atom_path <- "../Data/methyl_atoms.csv"
+
+output_path <- "../Data/AcProNMe.csv"
+
+```
+
+## Load required libraries
+
+```{r import libraries}
+
+library(tidyverse)
+
+```
+
+# Execute programme
+
+## Import data
+
+```{r import atomic coordinates}
+
+proline_residues <- read_csv(proline_residue_path) %>%
+  mutate(
+    AltLoc = replace_na(AltLoc,"A")
+    )
+
+acetyl <- read_csv(
+  file = acetyl_atom_path,
+  n_max=5500000
+  ) %>%
+  distinct() %>%
+  mutate(
+    "Atom Name" = case_match(
+      `Atom Name`,
+      "CA" ~ "C1",
+      "C" ~ "C2",
+      "O" ~ "O1"
+    )
+  ) %>% 
+  mutate(
+    AltLoc = replace_na(AltLoc,"A"),
+    ) %>%
+  rename("Preceding Residue" = `Residue Name`) %>%
+  drop_na(!`Insertion Code`)
+
+amide <- read_csv(
+  file = amide_atom_path,
+  n_max=5500000,
+  col_names = c(
+    "PDB ID", 
+    "Chain ID", 
+    "Residue Index", 
+    "Insertion Code",
+    "AltLoc", 
+    "Subsequent Residue", 
+    "Atom Name", 
+    "x", 
+    "y", 
+    "z"
+    ),
+  skip = 1
+  ) %>%
+  distinct() %>%
+  mutate(
+    AltLoc = replace_na(AltLoc,"A"),
+    `Atom Name` = "N2"
+    ) %>%
+  drop_na(!`Insertion Code`)
+
+methyl <- read_csv(
+  file = methyl_atom_path,
+  n_max=5500000
+  ) %>%
+  distinct() %>%
+  mutate(
+    AltLoc = replace_na(AltLoc,"A"),
+    ) %>%
+  mutate(
+    `Atom Name` = "C8"
+    ) %>%
+  drop_na(!`Insertion Code`)
+
+```
+## Convert data to new format
+
+```{r transform data}
+
+
+acetyl_wide <- acetyl %>% 
+  pivot_wider(
+    id_cols = `PDB ID` | `Chain ID` | `Residue Index` | `AltLoc`|`Preceding Residue`, 
+    names_from = `Atom Name`, 
+    values_from = x | y | z,
+    values_fn = ~first(.x),
+    names_glue = "{`Atom Name`}.{.value}"
+    ) %>% 
+  distinct()
+
+amide_wide <- amide %>% 
+  pivot_wider(
+    id_cols = `PDB ID` | `Chain ID` | `Residue Index` | `AltLoc`|`Subsequent Residue`, 
+    names_from = `Atom Name`, 
+    values_from = x | y | z,
+    values_fn = ~first(.x),
+    names_glue = "{`Atom Name`}.{.value}"
+    ) %>% 
+  distinct()
+
+methyl_wide <- methyl %>% 
+  pivot_wider(
+    id_cols = `PDB ID` | `Chain ID` | `Residue Index` | `AltLoc`|`Subsequent Residue`, 
+    names_from = `Atom Name`, 
+    values_from = x | y | z,
+    values_fn = ~first(.x),
+    names_glue = "{`Atom Name`}.{.value}"
+    ) %>% 
+  distinct()
+
+```
+
+## Join tables
+
+```{r join atoms}
+
+AcProNMe <- proline_residues %>% 
+  inner_join(acetyl_wide) %>%
+  inner_join(amide_wide) %>%
+  inner_join(methyl_wide) %>%
+  drop_na(!`Insertion Code`)
+
+```
+## Export to CSV file
+
+```{r export data}
+
+AcProNMe %>% write_csv(output_path)
+
+```

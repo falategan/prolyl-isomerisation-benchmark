@@ -1,0 +1,16 @@
+!XTB OPT TIGHTOPT PAL16 MiniPrint PrintGap
+
+%method
+	WriteJSONPropertyfile True
+end
+
+%base "${name}"
+
+%geom Scan 
+${x}
+${y}
+${z}
+end 
+end
+
+* xyzfile 0 1 ${input}

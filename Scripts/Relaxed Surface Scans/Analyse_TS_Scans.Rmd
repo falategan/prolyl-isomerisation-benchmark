@@ -1,0 +1,637 @@
+---
+title: "Analyse_TS_Scans"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+## User-defined file paths
+
+```{r Define paths}
+TS_ff_intl_path <- "../Data/TS_ff_scan.intl"
+TS_fr_intl_path <- "../Data/TS_fr_scan.intl"
+TS_rf_intl_path <- "../Data/TS_rf_scan.intl"
+TS_rr_intl_path <- "../Data/TS_rr_scan.intl"
+
+TS_ff_energy_path <- "../Data/TS_ff_scan.relaxscanact.dat"
+TS_fr_energy_path <- "../Data/TS_fr_scan.relaxscanact.dat"
+TS_rf_energy_path <- "../Data/TS_rf_scan.relaxscanact.dat"
+TS_rr_energy_path <- "../Data/TS_rr_scan.relaxscanact.dat"
+
+candidate_table_output_path <- "../Data/TS_Candidates.csv"
+
+PES_output_path <- "../Data/TS_PES.png"
+theta_plot_output_path <- "../Data/TS_theta_plot.png"
+
+
+```
+
+## Load required libraries
+
+```{r import libraries}
+
+library(tidyverse)
+library(hrbrthemes)
+library(legendry)
+
+```
+
+# Execute program
+
+## Import data
+
+```{r import Omega Eta Psi Scan}
+
+# ff
+
+scan_ff_coords <- read_csv(
+  TS_ff_intl_path,
+  col_types = "idddddddddd",
+  n_max = 50000
+  )
+
+scan_ff_energies <- read_table(
+  TS_ff_energy_path,
+  col_names = c(
+    "Omega",
+    "Eta",
+    "Psi",
+    "Energy"
+    ),
+  col_types = "dddd_",
+  n_max = 50000
+  ) 
+
+scan_ff <- bind_cols(
+  scan_ff_coords, 
+  scan_ff_energies)
+
+rm(
+  scan_ff_coords,
+  scan_ff_energies
+  )
+
+#fr
+
+scan_fr_coords <- read_csv(
+  TS_fr_intl_path,
+  col_types = "idddddddddd",
+  n_max = 50000
+  )
+
+scan_fr_energies <- read_table(
+  TS_fr_energy_path,
+  col_names = c(
+    "Omega",
+    "Eta",
+    "Psi",
+    "Energy"
+    ),
+  col_types = "dddd_",
+  n_max = 50000
+  ) 
+
+scan_fr <- bind_cols(
+  scan_fr_coords, 
+  scan_fr_energies)
+
+rm(
+  scan_fr_coords,
+  scan_fr_energies
+)
+
+
+#rf
+
+scan_rf_coords <- read_csv(
+  TS_rf_intl_path,
+  col_types = "idddddddddd",
+  n_max = 50000
+  )
+
+scan_rf_energies <- read_table(
+  TS_rf_energy_path,
+  col_names = c(
+    "Omega",
+    "Eta",
+    "Psi",
+    "Energy"
+    ),
+  col_types = "dddd_",
+  n_max = 50000
+  ) 
+
+scan_rf <- bind_cols(
+  scan_rf_coords, 
+  scan_rf_energies)
+
+rm(
+  scan_rf_coords,
+  scan_rf_energies
+)
+
+
+#rr
+
+scan_rr_coords <- read_csv(
+  TS_rr_intl_path,
+  col_types = "idddddddddd",
+  n_max = 50000
+  )
+
+scan_rr_energies <- read_table(
+  TS_rr_energy_path,
+  col_names = c(
+    "Omega",
+    "Eta",
+    "Psi",
+    "Energy"
+    ),
+  col_types = "dddd_",
+  n_max = 50000
+  ) 
+
+scan_rr <- bind_cols(
+  scan_rr_coords, 
+  scan_rr_energies)
+
+rm(
+  scan_rr_coords,
+  scan_rr_energies
+)
+
+
+scan <- bind_rows(
+  ff = scan_ff,
+  rf = scan_rf,
+  fr = scan_fr,
+  rr =scan_rr, 
+  .id = "direction"
+)
+
+minimum_energy <- min(scan$Energy)
+
+scan <- scan %>%
+  mutate(
+    Eta = 180-(Eta%%360),
+    Energy = (Energy - minimum_energy)*627.50947406
+  ) %>%
+  distinct(
+    Omega, 
+    Eta, 
+    Psi,
+    .keep_all = TRUE
+    )
+
+
+rm(
+  scan_rr,
+  scan_rf,
+  scan_fr,
+  scan_ff
+)
+
+```
+
+## Calculate Puckering Coordinates
+
+```{r Puckering coordinates}
+
+# Westhof & Sundaralingam
+
+scan <- scan %>%
+  mutate(
+    P = (-atan2(
+        (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5),
+        (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5) 
+      )*180/pi)%%360,
+    tau = 2/5*sqrt(
+      (
+        (
+          (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5)  
+          )^2
+        ) + (
+          (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5)  
+          )^2
+      )*180/pi
+    )
+
+```
+
+## Identify Transition States
+
+```{r Identify Transition States}
+
+ts_candidates <- scan  %>%
+  distinct(Omega, Eta, Psi, .keep_all = TRUE)
+
+join_table <- ts_candidates %>% 
+  select(
+  Omega | Eta | Psi | Energy
+  ) %>% 
+  mutate(
+    neighbour_Energy = Energy
+    ) %>%
+  select(!Energy)
+
+ts_candidates <- ts_candidates %>%
+    mutate(
+      previous_Omega = (Omega -5 - 180)%%360-180,
+      next_Omega = (Omega + 5 - 180)%%360-180,
+      previous_Eta = Eta -5,
+      next_Eta = Eta +5,
+      previous_Psi = Psi -5,
+      next_Psi = Psi +5,
+    ) %>%
+    filter(
+      previous_Eta >= -75,
+      next_Eta <= 75,
+      previous_Psi >=-60,
+      next_Psi <= 180
+      ) %>%
+    left_join(
+      join_table,
+      by = join_by(
+        previous_Omega == Omega, Eta, Psi
+      )
+      )%>%
+    filter(Energy > neighbour_Energy) %>%
+    select(!neighbour_Energy) %>%
+    left_join(
+      join_table,
+      by = join_by(
+        next_Omega == Omega, Eta, Psi
+      )
+      )%>%
+    filter(Energy > neighbour_Energy) %>%
+    select(!neighbour_Energy) %>%
+    left_join(
+      join_table,
+      by = join_by(
+        Omega, previous_Eta == Eta, Psi
+      )
+      )%>%
+    filter(Energy < neighbour_Energy) %>%
+    select(!neighbour_Energy) %>%
+    left_join(
+      join_table,
+      by = join_by(
+        Omega, next_Eta == Eta, Psi
+      )
+      )%>%
+    filter(Energy < neighbour_Energy) %>%
+    select(!neighbour_Energy)%>%
+    left_join(
+      join_table,
+      by = join_by(
+        Omega, Eta, previous_Psi == Psi
+      )
+      )%>%
+    filter(Energy < neighbour_Energy) %>%
+    select(!neighbour_Energy) %>%
+    left_join(
+      join_table,
+      by = join_by(
+        Omega, Eta, next_Psi == Psi
+      )
+      )%>%
+    filter(Energy < neighbour_Energy) %>%
+    select(!neighbour_Energy)
+
+
+
+ts_list <- ts_candidates %>%
+  mutate(
+    Source = paste0(
+      "TS_",
+      direction,
+      "_scan"
+    )
+      ) %>%
+  select(Source, Index)
+
+ts_list %>% write_csv(
+  "TS_search.input",
+  col_names = FALSE
+)
+
+ts_candidate_table <- ts_candidates %>%
+  mutate(
+    Isomer = case_when(
+      abs(omega) < 45 ~ "Cis",
+      abs(omega) > 135 ~ "Trans",
+      omega > 0 ~ "Syn",
+      .default = "Anti"
+      ),
+    Cluster = case_when(
+      psi > 120 & phi > -100 ~ "P", 
+      psi > 90 ~ "B", 
+      psi > 30 & phi > -110 ~ "G", 
+      psi > 30 ~ "Z", 
+      psi > -75 & phi > -80 ~ "A", 
+      psi > -30 ~ "D", psi > -100 ~ "N"
+      ),
+    Pucker = case_when(
+      P < 54 | P > 345 ~ "γ-endo",
+      P < 234 & P > 162 ~ "γ-exo",
+      P < 180 ~ "N-endo",
+      .default = "N-exo"
+      ),
+    Pyramidality = case_when(
+      Eta < -30 ~ "Exo",
+      Eta > 30 ~ "Endo",
+      .default = "Planar"
+      ),
+    Name = paste(
+      Isomer, Pyramidality, Cluster, Pucker, 
+      sep = "-"
+      )
+    ) %>%
+  select(
+    direction, Index, Name, omega, Eta, psi, phi, P, tau, Energy
+    ) %>%
+  arrange(Energy) 
+
+ts_candidate_table %>%
+  write_csv(
+    candidate_table_output_path
+    )
+  
+  
+```
+
+# Plot PES
+
+```{r PES}
+
+plot <- scan %>% 
+  semi_join(
+    ts_candidates,
+    by = join_by(Psi)
+  ) %>%
+  ggplot(
+    aes( 
+      x = Omega,
+      y = Eta,
+      z = Energy,
+      fill = Energy
+      )
+  ) +
+  geom_raster() +
+  geom_contour(
+    colour = "black",
+    breaks = seq(0,52,4)
+  ) +
+  geom_tile(
+    data = ts_candidates,
+    colour = "white",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    data = ts_candidates %>%
+      filter(
+        direction == "rr" & Index == 18727 |
+        direction == "rf" & Index == 10747 |
+        direction == "ff" & Index == 9398  |
+        direction == "fr" & Index == 18441 |
+        direction == "fr" & Index == 19232
+      ),
+    colour = "white",
+    shape = 4,
+    size = 5
+  ) +
+  scale_fill_viridis_c(
+    guide = guide_colourbar(
+      position = "bottom",
+      direction = "horizontal",
+      ),
+    breaks = seq(0,48,4),
+    limits = c(0, 52)
+    ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_face = "italic",
+    strip_text_family = "serif",
+    axis_title_face = "italic",
+    axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,5,0, unit = "mm")
+  ) +
+  theme(
+    panel.spacing.x = unit(2, "mm"),
+    panel.spacing.y = unit(2, "mm"),
+    legend.title.position = "bottom",
+    legend.title = element_text(
+      hjust = 0.5
+      ),
+    legend.text = element_text(
+      hjust = 0,
+      angle = -90,
+      vjust = 0.5
+    ),
+    legend.key.width = unit(50, "mm"),
+    legend.key.height = unit(10, "mm"),
+    legend.ticks = element_line(
+      colour = "black"
+    ),
+    legend.ticks.length =  unit(5, "mm"),
+    axis.text.x = element_text(
+      angle = 0,
+      hjust = 0.5,
+       vjust = 0.5
+      )
+    )+
+  scale_x_continuous(
+    breaks = seq(-180,180,60),
+    labels = ~paste0(.x, "°"),
+    expand = expansion(add = c(15, 0))
+    ) +
+  scale_y_continuous(
+    breaks = seq(-180,180,30),
+    labels = ~paste0(.x, "°")
+    ) +
+  coord_equal()+
+  guides(
+    x = guide_axis_nested(
+      key = key_range_manual(
+        start = c(-180, -130, -40, 50, 140),
+        end = c(-140,-50, 40, 130, 180),
+        name = c("trans", "anti", "cis", "syn", "trans"), 
+        level = c(0,0,0,0,0),
+        face = "italic",
+        hjust = 0.5,
+        vjust = 0.5,
+        
+      )
+    ),
+    y = guide_axis_nested(
+      key = key_range_manual(
+        start = c(-75, -25, 35),
+        end = c(-35, 25, 60),
+        name = c("exo", "planar", "endo"), 
+        level = c(0,0,0),
+        face = "italic",
+        hjust = 1.15,
+        vjust = 0.5
+      )
+    ),
+    )+
+  facet_wrap(
+    ~Psi,
+    dir = "h",
+    labeller = as_labeller(~paste0("ψ = ", .x,"°")),
+    axis.labels = "all",
+    strip.position = "right"
+    )+
+  xlab("ω") +
+  ylab("η")
+
+plot
+
+ggsave(
+  PES_output_path,
+  plot, 
+  height = unit(12, "cm"), 
+  width = unit(15.92, "cm")
+  )
+
+```
+
+
+## Plot φ
+
+```{r φ}
+
+plot <- scan %>%
+  filter(Psi == 0) %>%
+  ggplot(
+    aes(
+      x = Omega,
+      y = Eta,
+      z = phi,
+      fill = phi
+      )
+    ) +
+  geom_raster() +
+  geom_contour(
+    colour = "black",
+    breaks = seq(-180, 180, 20)
+  ) +
+  scale_fill_viridis_c(
+    name = "φ",
+    breaks = seq(-180, 180, 20),
+    labels = ~paste0(.x, "°"),
+    guide = guide_colourbar(
+      position = "bottom",
+      direction = "horizontal"
+      )
+  )+
+  coord_equal()+
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_face = "italic",
+    strip_text_family = "serif",
+    axis_title_face = "italic",
+    axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(5,15,0,0)
+  ) +
+  scale_x_continuous(
+      breaks = seq(-180,180,30),
+    labels = ~paste0(.x, "°"),
+    expand = expansion(add = c(5,1))
+    ) +
+  scale_y_continuous(
+    breaks = seq(-180,180,30),
+    labels = ~paste0(.x, "°"),
+    expand = expansion(add = c(5,0))
+    ) +
+  xlab("ω") +
+  ylab("η") +
+  theme(
+    panel.spacing.x = unit(0, "mm"),
+    panel.spacing.y = unit(2, "mm"),
+    legend.title.position = "bottom",
+    legend.title = element_text(
+      hjust = 0.5,
+      vjust = 0.5,
+      family = "serif",
+      face = "italic",
+      size = 10*.pt,
+      margin = margin(-2,0,0,0, unit = "mm")
+      ),
+    legend.text = element_text(
+      hjust = 0,
+      angle = -90,
+      vjust = 0.5
+    ),
+    legend.key.width = unit(40, "mm"),
+    axis.text.x = element_text(
+      angle = 0,
+      hjust = 0.5,
+       vjust = 0.5
+      ),
+    legend.ticks = element_line(
+      colour = "black"
+    ),
+    legend.ticks.length = unit(5, "mm")
+    ) +
+  guides(
+    x = guide_axis_nested(
+      key = key_range_manual(
+        start = c(-180, -135, -45, 45, 135),
+        end = c(-135,-45, 45, 135, 180),
+        name = c("trans", "anti", "cis", "syn", "trans"), 
+        level = c(0,0,0,0,0),
+        face = "italic",
+        hjust = 0.5,
+        vjust = 0.5
+      )
+    ),
+    y = guide_axis_nested(
+      key = key_range_manual(
+        start = c(-75, -30, 30),
+        end = c(-30, 30, 75),
+        name = c("exo", "planar", "endo"), 
+        level = c(0,0,0),
+        face = "italic",
+        hjust = 1,
+        vjust = 0.5
+      )
+    ),
+    )
+
+plot
+
+ggsave(
+  theta_plot_output_path,
+  plot, 
+  height = unit(15.92, "cm"), 
+  width = unit(15.92, "cm")
+  )
+
+```

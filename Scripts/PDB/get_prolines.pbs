@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -l walltime=24:00:00
+#PBS -N get_prolines
+#PBS -e get_prolines.err
+#PBS -o get_prolines.out
+#PBS -m ae
+
+#######################################
+# Set Variables
+#######################################
+
+PDB_DIR="path to pdb directory"
+
+#######################################
+# Execute Script
+#######################################
+
+cd $PBS_O_WORKDIR
+
+echo "PDB ID, Chain ID, Residue Index, Insertion Code, AltLoc, Atom Name, x, y, z" > proline_data.csv
+while read line; do
+	protein=${line%$'\n'}
+	file=$protein.pdb
+	echo "protein: $protein\n file: $file" >> get_prolines.out
+	echo "reading $file"
+	awk -v protein=$protein -f read_proline.awk "$PDB_DIR/$file" >> proline_atoms.csv 2>> read_proline.err
+done < pisces_pdb_ids.txt

@@ -1,0 +1,705 @@
+---
+title: "Analyse PDB"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+## User-defined file paths
+
+```{r Define paths}
+
+internal_coordinate_path <- "../Data/PDB.intl"
+
+maxima_table_output_path <- "../Data/maxima_table.csv"
+
+psi_chi_plot_output_path <- "../Data/psi_chi_plot.png"
+
+hi_res_bin_plot_output_path <- "../Data/hi-res_bins.png"
+
+```
+
+## Load required libraries
+
+```{r import libraries}
+
+library(tidyverse)
+library(hrbrthemes)
+```
+
+# Execute programme
+
+## Import data
+
+```{r import internal coordinate data}
+
+internal <- read_csv(internal_coordinate_path) %>%
+  distinct(
+    `PDB ID`, 
+    `Preceding Residue`, 
+    `Subsequent Residue`, 
+    `Residue Index`, 
+    .keep_all = TRUE
+    )
+```
+
+## Calculate Puckering Coordinates
+
+```{r Puckering coordinates}
+
+# Westhof
+
+internal <- internal %>%
+  mutate(
+    P = (-atan2(
+        (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5),
+        (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5) 
+      )*180/pi) %% 360,
+    tau = 2/5*sqrt(
+      (
+        (
+          (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5)  
+          )^2
+        ) + (
+          (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5)  
+          )^2
+      )*180/pi
+    )
+
+```
+
+## Group Conformations
+
+```{r group conformations}
+
+
+df <- internal %>%  
+  mutate(
+    "Isomer 1" = case_when(
+      abs(omega) <= 45 ~ "Cis",
+      abs(omega) >= 135 ~ "Trans",
+      .default = "Gauche"
+    ),
+    "Isomer 2" = case_when(
+      abs(omega2) <= 45 ~ "Cis",
+      abs(omega2) >= 135 ~ "Trans",
+      .default = "Gauche"
+    )
+  )
+
+rm(internal)
+  
+```
+
+## Find trans local maxima
+
+```{r prepare trans local maxima, include=FALSE}
+
+count_conformations <- function(
+    data, 
+    psi_start, 
+    psi_end, 
+    chi1_start, 
+    chi1_end
+    ) {
+  data %>% 
+    filter(
+      psi > psi_start,
+      psi <= psi_end,
+      chi1 > chi1_start,
+      chi1 <= chi1_end
+    ) %>%
+    summarise(n = n())
+  }
+
+Psi_bins <- tibble(
+    Psi_start = seq(-180.5, 179.5, 1),
+    Psi_mid = seq(-180, 180, 1),
+    Psi_end = seq(-179.5, 180.5, 1)
+    )
+
+Chi1_bins <- tibble(
+    Chi1_start = seq(-60.5, 59.5, 1),
+    Chi1_mid = seq(-60, 60, 1),
+    Chi1_end = seq(-59.5, 60.5, 1)
+    )
+
+trans_angles <- df %>%
+  filter(
+    `Isomer 1` == "Trans"
+    ) %>%
+  select(
+    `PDB ID`,
+    `Chain ID`,
+    `Residue Index`,
+    AltLoc,
+    `Preceding Residue`,
+    `Subsequent Residue`,
+    omega,
+    psi,
+    phi,
+    chi1,
+    P,
+    tau,
+    eta1
+  )
+
+bins <- cross_join(
+  Psi_bins, 
+  Chi1_bins
+  )
+
+n = tibble(
+  n = integer()
+  )
+
+for (i in 1:length(bins$Psi_mid)) {
+  n <- n %>% 
+    add_row(
+      count_conformations(
+      trans_angles, 
+      bins$Psi_start[i],
+      bins$Psi_end[i],
+      bins$Chi1_start[i],
+      bins$Chi1_end[i]
+      )
+    )
+  print(100*length(n$n)/length(bins$Psi_mid))
+}
+
+bins <- bins %>% 
+  add_column(n)
+
+```
+
+## Identify Maxima
+
+```{r maxima}
+local_maxima <- tibble(
+  "Psi_start" = double(),
+  "Psi_mid" = double(),
+  "Psi_end" = double(),
+  "Chi1_start" = double(),
+  "Chi1_mid" = double(),
+  "Chi1_end" = double(),
+  "n" = integer()
+  )
+
+count <- 0
+
+for (i in seq(-180, 180, 1)) {
+  for (j in seq(-60, 60, 1)) {
+    candidate <- bins %>%
+      filter(
+        Psi_mid == i, 
+        Chi1_mid == j
+        )
+    
+    neighbours <- bins %>%
+      filter(
+        (
+          Psi_start > (i - 185.5) %% 360 - 180 &
+          Psi_end <= (i - 174.5) %% 360 - 180 
+        ) &
+        (
+          Chi1_start > j - 5 & 
+          Chi1_end <= j + 5 
+        ) &
+        !(Psi_mid == i & Chi1_mid == j)
+      )
+    
+    if (length(neighbours > 1) & 
+        all(candidate$n > neighbours$n)
+        ) {
+      local_maxima <- local_maxima %>%
+        add_row(candidate)
+    }
+    
+    count <- count + 1
+  }
+  print(100 * count/43681)
+}
+
+near_maxima <- trans_angles %>%
+  filter(
+    chi1 >= -60, 
+    chi1 <= 60
+    ) %>%
+  left_join(
+    Psi_bins, 
+    join_by(
+      between(
+        x$psi, 
+        y$Psi_start, 
+        y$Psi_end, 
+        bounds = "(]"
+        )
+      )
+      ) %>%
+  left_join(
+    Chi1_bins,
+    join_by(
+      between(
+        x$chi1, 
+        y$Chi1_start, 
+        y$Chi1_end, 
+        bounds = "(]"
+        )
+      )
+      ) %>%
+    mutate(
+      Eta = 180 - (eta1 %% 360)
+      ) %>%
+    right_join(
+      local_maxima
+        ) %>% 
+  filter(n > 30)
+
+  
+maxima_bins <- near_maxima %>%
+  mutate(
+    phi_bin = cut(
+      phi,
+      breaks = seq(-180.5, 180.5,1),
+      labels = FALSE
+      )-181,
+    chi1_bin = cut(
+      chi1,
+      breaks = seq(-180.5, 180.5,1), 
+      labels = FALSE
+      )-181,
+    Eta_bin = cut(
+      Eta,
+      breaks = seq(-180.5, 180.5,1), 
+      labels = FALSE
+      )-181,
+    omega_bin = cut(
+      omega,
+      breaks = seq(-180.5, 180.5,1), 
+      labels = FALSE
+      )-181,
+    P_bin = cut(
+      P,
+      breaks = seq(-0.5, 360.5,1), 
+      labels = FALSE
+      )-1,
+    tau_bin = cut(
+      tau,
+      breaks = seq(-180.5, 180.5,1), 
+      labels = FALSE
+      )-181,
+    psi_bin = cut(
+      psi,
+      breaks = seq(-180.5, 180.5,1), 
+      labels = FALSE
+      )-181
+  ) 
+
+phi_maxima <- maxima_bins %>%
+  group_by(
+    Psi_mid, 
+    `Chi1_mid`, 
+    phi_bin
+    ) %>%
+  summarise(
+    n = n()
+    ) %>%
+  filter(
+    n == max(n) 
+    ) %>%
+  filter(
+    phi_bin == first(max(phi_bin))
+    ) %>%
+  select(!n)
+
+
+
+Eta_maxima <- maxima_bins %>%
+  group_by(
+    Psi_mid, 
+    `Chi1_mid`, 
+    Eta_bin
+    ) %>%
+  summarise(
+    n = n()
+    ) %>%
+  filter(
+    n == max(n) 
+    ) %>%
+  filter(
+    Eta_bin == first(max(Eta_bin))
+    ) %>%
+  select(!n) 
+
+P_maxima <- maxima_bins %>%
+  group_by(
+    Psi_mid, 
+    `Chi1_mid`, 
+    P_bin
+    ) %>%
+  summarise(
+    n = n()
+    ) %>%
+  filter(
+    n == max(n) 
+    ) %>%
+  filter(
+    P_bin == first(max(P_bin))
+    ) %>%
+  select(!n) 
+  
+tau_maxima <- maxima_bins %>%
+  group_by(
+    Psi_mid, 
+    `Chi1_mid`, 
+    tau_bin
+    ) %>%
+  summarise(
+    n = n()
+    ) %>%
+  filter(
+    n == max(n) 
+    ) %>%
+  select(!n)
+
+omega_maxima <- maxima_bins %>%
+  group_by(
+    Psi_start, 
+    Psi_end,
+    Psi_mid, 
+    `Chi1_start`,
+    `Chi1_mid`,
+    `Chi1_end`, 
+    omega_bin
+    ) %>%
+  summarise(
+    n = n()
+    ) %>%
+  filter(
+    n == max(n)
+    ) %>%
+  filter(
+    omega_bin == first(max(omega_bin))
+    ) 
+
+maxima <- omega_maxima %>%
+  full_join(
+    P_maxima
+    ) %>% 
+  full_join(
+    tau_maxima
+    ) %>% 
+  full_join(
+    phi_maxima
+    ) %>% 
+  full_join(
+    Eta_maxima
+    ) %>%
+  arrange(
+    desc(n)
+    ) %>%
+  rename_with(
+    ~ gsub(
+      "_bin", 
+      "", 
+      .x
+      )
+    ) %>%
+  left_join(
+    local_maxima %>%
+      select(Psi_mid, Chi1_mid, n) %>%
+      rename("total" = n),
+    join_by(
+      Psi_mid, 
+      Chi1_mid
+      )
+  ) %>%
+  ungroup()%>%
+  distinct(
+    Psi_mid, 
+    Chi1_mid, 
+    .keep_all = TRUE
+    )%>%
+  mutate(
+    Cluster = case_when(
+      Psi_mid > 120 & phi > -100 ~ "P", 
+      Psi_mid > 90 ~ "B", 
+      Psi_mid > 30 & phi > -110 ~ "G", 
+      Psi_mid > 30 ~ "Z", 
+      Psi_mid > -75 & phi > -80 ~ "A", 
+      Psi_mid > -30 ~ "D", Psi_mid > -100 ~ "N"
+      ),
+    Pucker = case_when(
+      P < 54 | P > 342 ~ "γ-endo",
+      P < 234 & P > 162 ~ "γ-exo",
+      P < 180 ~ "N-endo",
+      .default = "N-exo"
+      ),
+    Name = paste(
+      Pucker, Cluster,
+      sep = "-"
+      ),
+    "Chi 1" = Chi1_mid,
+    "Psi" = Psi_mid
+  ) %>%
+  select(
+    !contains("_")
+    ) %>%
+  filter(
+    total > 30
+  ) %>%
+  mutate(Proportion = total/max(total))
+
+write_csv(
+  maxima,
+  maxima_table_output_path
+  )
+
+```
+
+## Plots
+
+### Psi Chi bins
+
+```{r Psi Chi bins, fig.height=15, fig.width=25}
+
+plot <- bins %>%
+  ggplot(
+    aes(
+      xmin = Psi_start,
+      ymin = Chi1_start, 
+      xmax = Psi_end, 
+      ymax = Chi1_end,
+      x = Psi_mid, 
+      y = Chi1_mid, 
+      z = n,
+      fill = n, 
+      label = paste0(
+        "(", Psi_mid, ", ", Chi1_mid, "): ", n
+        )
+    )
+  ) +
+  geom_rect() +
+  geom_rect(
+    data = local_maxima %>%
+      filter(
+        n > 30
+        ),
+    colour = "white", 
+    linewidth = 0.5
+  ) +
+  
+  coord_equal() +
+  scale_y_continuous(
+    name = "χ¹", 
+    breaks = seq(-60, 60, 15),
+    expand = expansion(add = 3),
+    labels = ~ paste0(.x, "°")
+  ) +
+  scale_x_continuous(
+    name = "ψ", 
+    breaks = seq(-180, 180, 15),
+    expand = expansion(add = 3),
+    labels = ~ paste0(.x, "°"),
+    limits = c(-75, 180)
+  ) +
+  scale_fill_viridis_c(
+    breaks = seq(0, 550, 25)
+    ) +
+  guides(
+    fill = guide_colorbar(
+      position = "bottom"
+      )
+    ) +
+  theme_ipsum(
+    base_size = 6 * .pt, 
+    strip_text_face = "italic", 
+    strip_text_family = "serif",
+    axis_title_face = "italic", 
+    axis_title_family = "serif", 
+    axis_text_size = 6 * .pt, 
+    axis_title_size = 10 * .pt, 
+    axis_title_just = "cm", 
+    plot_margin = margin(0, 0, 0, 0)
+  ) +
+  theme(
+    legend.key.width = unit(50, "mm"),
+    axis.text.x = element_text(
+      angle = -90, 
+      hjust = 0, 
+      vjust = 0.5
+      ),
+    legend.title = element_text(
+      hjust = 0, 
+      vjust = 1, 
+      margin = margin(
+        0, 16, 0, 0, 
+        unit = "pt"
+        ),
+      family = "serif", 
+      size = 10 * .pt
+    ),
+    legend.text = element_text(
+      hjust = 0, 
+      angle = -90, 
+      vjust = 0.5
+      ),
+    legend.ticks = element_line(
+      colour = "black"
+      ),
+    legend.ticks.length = unit(
+      5, "mm"
+      ),
+    legend.key.height = unit(
+      10, "mm"
+      ),
+  )
+
+plot
+
+
+ggsave(
+  psi_chi_plot_output_path,
+  plot,
+  height = unit(10, "cm"),
+  width = unit(15.92, "cm")
+)
+
+```
+### Maxima Histograms
+
+```{r high dimentional bins}
+
+plot <- near_maxima %>%
+  filter(
+    Psi_mid == -39, 
+    Chi1_mid == -29,
+    !(
+      if_any(
+        phi | tau | omega | Eta, 
+        ~is.na(.x)
+        ) & 
+      !is.na(P)
+      ) 
+    ) %>%
+  pivot_longer(
+    cols = phi | P | tau | omega | Eta, 
+    names_to = "Coordinate", 
+    values_to = "Angle"
+  ) %>%
+  filter(
+    !is.na(Angle),
+    !(Coordinate == "omega" & Angle < -179.5)
+    )%>%
+  ggplot(
+    aes(
+      x = Angle, 
+      fill = Coordinate
+      )
+    ) +
+  geom_histogram(
+    binwidth = 1, 
+    position = "identity", 
+    alpha = 0.5, 
+    center = 0
+    ) +
+  geom_vline(
+    data = maxima %>%
+      filter(
+        Psi== -39, `Chi 1` == -29
+        ) %>%
+      mutate(
+        P = (P - 180) %% 360 - 180
+        ) %>%
+      pivot_longer(
+        cols = phi | P | tau | omega | Eta,
+        names_to = "Coordinate", 
+        values_to = "Angle"
+      ),
+    aes(
+      xintercept = Angle, 
+      colour = Coordinate
+      )
+  )  +
+  coord_radial(
+    expand = FALSE, 
+    r.axis.inside = TRUE, 
+    inner.radius = 0.4
+    ) +
+  xlab("Angle (°)") +
+  ylab("Frequency") +
+  scale_x_continuous(
+    limits = c(-180, 180),
+    breaks = seq(-180, 180, 15),
+    oob = scales::oob_keep
+    ) +
+  scale_y_continuous(
+  ) +
+  scale_fill_discrete(
+    limit = c("phi", "P", "tau", "omega", "Eta"),
+    labels = c("φ", "P", "τ", "ω", "η")
+    ) +
+   scale_colour_discrete(
+    limit = c("phi", "P", "tau", "omega", "Eta"),
+    guide = guide_none()
+    ) +
+  theme_ipsum(
+    base_size = 8 * .pt, 
+    strip_text_face = "italic", 
+    strip_text_family = "serif",
+    axis_text_size = 6 * .pt, 
+    axis_title_size = 8 * .pt, 
+    axis_title_just = "cm", 
+    plot_margin = margin(0, 0, 0, 0)
+  ) +
+  theme(
+    legend.position = "bottom",
+    legend.text = element_text(
+      family = "serif",
+      face = "italic",
+      size = 8 * .pt,
+      margin = margin(0, 0, 0, -0.3),
+      ),
+    legend.title.position = "bottom",
+    legend.justification = "left",
+    axis.title.y = element_text(
+      angle = 90, 
+      hjust = 0.8,
+      vjust = -105
+      ),
+    axis.title.x = element_text(
+      margin = margin(-75, 0, 0, 0)
+      )
+  )
+    
+plot
+
+
+ggsave(
+  hi_res_bin_plot_output_path,
+  plot,
+  height = unit(20, "cm"),
+  width = unit(15.92, "cm")
+)
+
+
+```
+

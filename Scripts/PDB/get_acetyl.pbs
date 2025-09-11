@@ -1,0 +1,30 @@
+#!/bin/bash
+#PBS -l walltime=24:00:00
+#PBS -N get_acetyl
+#PBS -e get_acetyl.err
+#PBS -o get_acetyl.out
+#PBS -m ae
+
+#######################################
+# Set Variables
+#######################################
+
+PDB_DIR="path to pdb directory"
+
+#######################################
+# Execute Script
+#######################################
+
+cd $PBS_O_WORKDIR
+echo "File, Chain ID, Preceding Index, Insertion Code"
+echo "PDB ID, Chain ID, Residue Index, Insertion Code, AltLoc, Residue Name, Atom Name, x, y, z" > acetyl_atoms.csv
+{
+	read
+	IFS=","
+	while read protein chain residue in_code other; do
+		file=$protein.pdb
+		prev_residue=$(($residue-1))
+		echo $file, $chain, $prev_residue, $in_code
+		awk -v protein=$protein -v chain=$chain -v residue=$residue -v prev_residue=$prev_residue -v in_code=$in_code -f read_acetyl.awk "$PDB_DIR/$file" >> acetyl_atoms.csv 2>> read_acetyl.err
+	done
+} < proline_residues.csv

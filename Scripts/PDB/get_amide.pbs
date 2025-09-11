@@ -1,0 +1,30 @@
+#!/bin/bash
+#PBS -l walltime=24:00:00
+#PBS -N get_amide
+#PBS -e get_amide.err
+#PBS -o get_amide.out
+#PBS -m ae
+
+#######################################
+# Set Variables
+#######################################
+
+PDB_DIR="path to pdb directory"
+
+#######################################
+# Execute Script
+#######################################
+
+cd $PBS_O_WORKDIR
+echo "File, Chain ID, Proline Index, Subsequent Index, Insertion Code"
+echo "PDB ID, Chain ID, Residue Index, Insertion Code, AltLoc, Residue Name, Atom Name, x, y, z" > amide_atoms.csv
+{
+	read
+	IFS=","
+	while read protein chain residue in_code other; do
+		file=$protein.pdb
+		next_residue=$(($residue+1))
+		echo $file, $chain, $residue, $next_residue, $in_code
+		awk -v protein=$protein -v chain=$chain -v residue=$residue -v next_residue=$next_residue -v in_code=$in_code -f read_amide.awk "$PDB_DIR/$file" >> amide_atoms.csv 2>> read_amide.err
+	done
+} < proline_residues.csv

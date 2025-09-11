@@ -1,0 +1,626 @@
+---
+title: "Minima Scans"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+## User-defined file paths
+
+```{r Define paths}
+
+forward_scan_internal_path <- "../Data/minima_fwd_scan.intl"
+reverse_scan_internal_path <- "../Data/minima_rev_scan.intl"
+
+forward_scan_energy_path <- "../Data/minima_fwd_scan.relaxscanact.dat"
+reverse_scan_energy_path <- "../Data/minima_rev_scan.relaxscanact.dat"
+
+minima_table_output_path <- "../Data/minima_table.csv"
+
+PES_output_path <- "../Data/minima_PES.png"
+
+minima_psi_surface_output_path <- "../Data/minima_psi_surface.png"
+
+minima_P_surface_output_path <- "../Data/minima_P_surface.png"
+```
+
+## Load required libraries
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(hrbrthemes)
+library(cetcolor)
+
+```
+
+# Execute programme
+
+## Import data
+
+```{r import Omega Chi 1 Eta Scan}
+
+reverse_scan_coords <- read_csv(
+  reverse_scan_internal_path,
+  col_types = "idddddddddddddddddddddddd",
+  n_max = 50000
+  )
+
+reverse_scan_energies <- read_table(
+  reverse_scan_energy_path,
+  col_names = c(
+    "Omega",
+    "Eta",
+    "Chi 1",
+    "Energy"
+    ),
+  col_types = "dddd_",
+  n_max = 50000
+  ) 
+
+reverse_scan <- bind_cols(
+  reverse_scan_coords, 
+  reverse_scan_energies)
+
+rm(
+  reverse_scan_coords,
+  reverse_scan_energies
+  )
+
+forward_scan_coords <- read_csv(
+ forward_scan_internal_path,
+  col_types = "iddddddddddddddddddddddddddd",
+  n_max = 50000
+  )
+
+forward_scan_energies <- read_table(
+ forward_scan_energy_path,
+  col_names = c(
+    "Omega",
+    "Eta",
+    "Chi 1",
+    "Energy"
+    ),
+  col_types = "dddd_",
+  n_max = 50000
+  ) 
+
+forward_scan <- bind_cols(
+  forward_scan_coords, 
+  forward_scan_energies) 
+
+rm(
+  forward_scan_coords,
+  forward_scan_energies
+  )
+
+minima_scan <- bind_rows(
+  reverse_scan, 
+  forward_scan,
+  .id = "direction")
+
+minimum_energy = min(minima_scan$Energy)
+
+
+minima_scan <- minima_scan %>%
+  mutate(
+    Eta = 180-(Eta%%360),
+    Energy = (Energy - minimum_energy)*627.50947406
+  )
+
+rm(
+  forward_scan,
+  reverse_scan
+  )
+
+
+```
+
+## Calculate Puckering Coordinates
+
+```{r Puckering coordinates}
+
+# Westhof
+minima_scan <- minima_scan %>%
+  mutate(
+    P = (-atan2(
+        (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5),
+        (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5) 
+      )*180/pi) %% 360,
+    tau = (2/5)*sqrt(
+      (
+        (
+        (chi2*pi/180)*sin(4*pi*0/5) +
+        (chi3*pi/180)*sin(4*pi*1/5) +
+        (chi4*pi/180)*sin(4*pi*2/5) +
+        (theta*pi/180)*sin(4*pi*3/5) +
+        (chi1*pi/180)*sin(4*pi*4/5)  
+          )^2
+        ) + (
+          (chi2*pi/180)*cos(4*pi*0/5) +
+        (chi3*pi/180)*cos(4*pi*1/5) +
+        (chi4*pi/180)*cos(4*pi*2/5) +
+        (theta*pi/180)*cos(4*pi*3/5) +
+        (chi1*pi/180)*cos(4*pi*4/5)  
+          )^2
+      ) *180/pi
+    )
+
+```
+
+
+## Identify Local minima
+
+```{r identify local minima}
+
+neighbour_steps <- expand_grid(
+  "Omega" = -2:2,
+  "Eta" = -2:2,
+  "Chi 1" = -2:2
+) %>%
+  filter(
+    !(Omega == 0 & Eta == 0 & `Chi 1` == 0)
+  )
+
+
+candidate_minima <- minima_scan %>%
+  distinct(Omega, Eta, `Chi 1`, .keep_all = TRUE)
+
+join_table <- candidate_minima %>% select(
+  Omega | Eta | `Chi 1` | Energy
+  ) %>% 
+  mutate(
+    "neighbour_Omega" = Omega,
+    "neighbour_Eta" = Eta,
+    "neighbour_Chi_1" = `Chi 1`,
+    "neighbour_Energy" = Energy,
+    .keep = "unused"
+)
+
+for (i in 1:nrow(neighbour_steps)) {
+  candidate_minima <- candidate_minima %>%
+    mutate(
+      neighbour_Omega = (
+        Omega + neighbour_steps$Omega[i]*2.5 - 180
+        )%%360-180,
+      neighbour_Chi_1 = `Chi 1` + 
+        neighbour_steps$`Chi 1`[i]*5,
+      neighbour_Eta = Eta + 
+        neighbour_steps$Eta[i]*5
+    ) %>%
+    filter(
+      neighbour_Chi_1 <=60,
+      neighbour_Chi_1 >=-45,
+      neighbour_Eta <= 60,
+      neighbour_Eta >=-75
+      ) %>%
+    left_join(
+      join_table
+      ) %>%
+    filter(Energy < neighbour_Energy) %>% 
+    mutate(Energy_difference = neighbour_Energy - Energy) %>%
+    select(!neighbour_Energy)
+}
+
+minima_candidate_table <- candidate_minima %>% 
+  slice_min(
+    Energy,
+    n=4
+    )%>%
+  mutate(
+    Isomer = case_when(
+      abs(Omega) > 60 ~ "Trans",
+      abs(Omega) <= 60 ~ "Cis",
+      .default = "Gauche"
+      ),
+    Cluster = case_when(
+      psi > 120 & phi > -100 ~ "P", 
+      psi > 90 ~ "B", 
+      psi > 30 & phi > -110 ~ "G", 
+      psi > 30 ~ "Z", 
+      psi > -75 & phi > -80 ~ "A", 
+      psi > -30 ~ "D", psi > -100 ~ "N"
+      ),
+    Pucker = case_when(
+      P < 54 | P > 345 ~ "γ-endo",
+      P < 234 & P > 162 ~ "γ-exo",
+      P < 180 ~ "N-endo",
+      .default = "N-exo"
+      ),
+    Name = paste(
+      Isomer, Cluster, Pucker, 
+      sep = "-"
+      )
+    ) %>%
+  select(
+    direction, Index, Name, Omega, Eta, `Chi 1`, psi, phi, P, tau, Energy, 
+    ) %>%
+  arrange(Energy)
+
+minima_candidate_table %>% 
+  write_csv(
+    minima_table_output_path
+    )
+  
+```
+
+## Plot PES
+
+```{r PES}
+
+plot <- minima_scan %>% 
+  semi_join(
+    candidate_minima,
+    join_by(
+      `Chi 1`
+    )
+  ) %>%
+  ggplot(
+    aes( 
+      x = Omega,
+      y = Eta,
+      z = Energy,
+      fill = Energy
+      )
+  ) +
+  geom_raster() +
+  geom_contour(
+    breaks = seq(0, 48, 4),
+    colour = "black"
+  ) +
+  geom_tile(
+    data = candidate_minima,
+    aes(
+      x= Omega,
+      y= Eta,
+    ),
+    colour = "white",
+    width = 2.5,
+    height = 5,
+    linewidth = 0.5
+    )+
+  geom_point(
+    data = candidate_minima %>% 
+      slice_min(
+        Energy,
+        n=4
+        ),
+    aes(
+      x= Omega,
+      y= Eta,
+    ),
+    colour = "white",
+    shape = 4,
+    size = 5
+    #width = 2.5,
+    #height = 5,
+    #linewidth = 0.5
+    )+
+  scale_fill_viridis_c(
+    breaks = seq(0, 48, 4),
+    limits = c(0, 52),
+    guide = guide_colorbar(
+      position = "bottom",
+      direction = "horizontal"
+    )
+  ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_face = "italic",
+    strip_text_family = "serif",
+    axis_title_face = "italic",
+    axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,5,0, unit = "mm")
+  ) +
+  coord_equal()+
+  theme(
+    panel.spacing.x = unit(0, "mm"),
+    panel.spacing.y = unit(2, "mm"),
+    legend.title.position = "bottom",
+    legend.title = element_text(hjust = 0.5),
+    legend.key.width =  unit(50, "mm"),
+    legend.key.height =  unit(10, "mm"),
+    legend.ticks = element_line(
+      colour = "black",
+      linewidth = 1
+    ),
+    legend.ticks.length = unit(5, "mm"),
+    axis.text.x = element_text(
+      angle = 0,
+      vjust = 0.15
+    )
+    # strip.text = element_text(
+    #  angle = 180
+    #  )
+    )+
+  scale_x_continuous(
+    breaks = seq(-180,180,60),
+    labels = ~paste0(.x, "°"),
+    expand = expansion(add = c(15,0)),
+    ) +
+  scale_y_continuous(
+    breaks = seq(-360,360,30),
+    labels = ~paste0(.x, "°")
+    ) +
+  guides(
+    x = guide_axis_nested(
+      key = key_range_manual(
+        start = c(-180, -130, -40, 50, 140),
+        end = c(-140,-50, 40, 130, 180),
+        name = c("trans", "anti", "cis", "syn", "trans"), 
+        level = c(0,0,0,0,0),
+        face = "italic",
+        hjust = 0.5,
+        vjust = 0
+      )
+    ),
+    y = guide_axis_nested(
+      key = key_range_manual(
+        start = c(-75, -25, 35),
+        end = c(-35, 25, 60),
+        name = c("exo", "planar", "endo"), 
+        level = c(0,0,0),
+        face = "italic",
+        hjust = 1.15,
+        vjust = 0.5
+      )
+    ),
+    )+
+   facet_wrap(
+     ~`Chi 1`,
+     ncol =2,
+     dir = "v",
+     labeller = as_labeller(~paste0("χ¹ = ", .x,"°")),
+     strip.position = "right"
+     )+
+  xlab("ω") +
+  ylab("η")
+
+plot
+
+ggsave(
+  PES_output_path,
+  plot, 
+  height = unit(15.92, "cm"), 
+  width = unit(15.92, "cm")
+  )
+
+
+
+
+```
+
+## Plot Psi dihedral
+
+```{r Psi dependency}
+
+plot <- minima_scan %>% 
+  semi_join(
+    candidate_minima %>% slice_min(Energy, n=4),
+    join_by(
+      `Chi 1`
+    )
+  ) %>%
+  ggplot(
+    aes( 
+      x = Omega,
+      y = Eta,
+      fill = psi
+      )
+  ) +
+  geom_raster() +
+  geom_tile(
+    data = candidate_minima %>% slice_min(Energy,n=4),
+    colour = "black",
+    width = 2.5,
+    height = 5,
+    linewidth = 0.5
+    )+
+  scale_fill_gradientn(
+    colours=cet_pal(256, name="cbc1"),
+    breaks = seq(-180, 180, 30),
+    labels = ~paste0(.x, "°"),
+    guide = guide_colourbar(
+      title = "ψ",
+      position = "bottom",
+      direction = "horizontal"
+    )
+    ) +
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_face = "italic",
+    strip_text_family = "serif",
+    axis_title_face = "italic",
+    axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,5,0, unit = "mm")
+  ) +
+  theme(
+    panel.spacing.x = unit(0, "mm"),
+    panel.spacing.y = unit(2, "mm"),
+    legend.title.position = "bottom",
+    legend.title = element_text(
+      family = "serif",
+      face = "italic",
+      hjust = 0.5),
+    legend.key.width =  unit(50, "mm"),
+    legend.key.height =  unit(10, "mm"),
+    legend.ticks = element_line(
+      colour = "black",
+      linewidth = 1
+    ),
+    legend.ticks.length = unit(5, "mm"),
+    axis.text.x = element_text(
+      angle = 0,
+      vjust = 0.15
+    )
+    )+
+  scale_x_continuous(
+    breaks = seq(-180,180,60),
+    labels = ~paste0(.x, "°"),
+    expand = expansion(add = c(15,0))
+    ) +
+  scale_y_continuous(
+    breaks = seq(-180,180,30),
+    labels = ~paste0(.x, "°")
+    ) +
+  coord_equal()+
+  guides(
+    x = guide_axis_nested(
+      key = key_range_manual(
+        start = c(-180, -130, -40, 50, 140),
+        end = c(-140,-50, 40, 130, 180),
+        name = c("trans", "anti", "cis", "syn", "trans"), 
+        level = c(0,0,0,0,0),
+        face = "italic",
+        hjust = 0.5,
+        vjust = 0
+      )
+    ),
+    y = guide_axis_nested(
+      key = key_range_manual(
+        start = c(-75, -25, 35),
+        end = c(-35, 25, 60),
+        name = c("exo", "planar", "endo"), 
+        level = c(0,0,0),
+        face = "italic",
+        hjust = 1.15,
+        vjust = 0.5
+      )
+    ),
+    )+
+  facet_wrap(
+    ~`Chi 1`,
+    ncol =2,
+    dir = "v",
+    labeller = as_labeller(~paste0("χ¹ = ", .x,"°")),
+    strip.position = "right"
+    )+
+  xlab("ω") +
+  ylab("η")
+
+plot
+
+ggsave(
+  minima_psi_surface_output_path,
+  plot, 
+  height = unit(13, "cm"), 
+  width = unit(15.92, "cm")
+  )
+```
+
+
+## Plot Puckering
+
+```{r Puckering}
+
+plot <- minima_scan %>% 
+  semi_join(
+    candidate_minima %>% slice_min(Energy, n=4),
+    join_by(
+      Eta
+    )
+  ) %>%
+  ggplot(
+    aes( 
+      x = Omega,
+      y = `Chi 1`,
+      fill = P
+      )
+  ) +
+  geom_raster() +
+  geom_tile(
+    data = candidate_minima %>% slice_min(Energy,n=4),
+    colour = "white",
+    width = 2.5,
+    height = 5,
+    linewidth = 0.5
+    )+
+  scale_fill_gradientn(
+    colours=cet_pal(256, name="cbc1"),
+    breaks = seq(0, 360, 30),
+    labels = ~paste0(.x, "°"),
+    guide = guide_colourbar(
+      title = "P",
+      position = "bottom",
+      direction = "horizontal"
+    )
+    ) +
+  coord_equal()+
+  theme_ipsum(
+    base_size = 8*.pt,
+    strip_text_face = "italic",
+    strip_text_family = "serif",
+    axis_title_face = "italic",
+    axis_title_family = "serif",
+    strip_text_size = 8*.pt,
+    axis_text_size = 8*.pt,
+    axis_title_size = 10*.pt,
+    axis_title_just = "cm",
+    plot_margin = margin(0,0,0,0)
+  ) +
+  theme(
+    panel.spacing.x = unit(0, "mm"),
+    panel.spacing.y = unit(2, "mm"),
+    legend.title.position = "bottom",
+    legend.title = element_text(
+      family = "serif",
+      face = "italic",
+      hjust = 0.5),
+    legend.key.width =  unit(50, "mm"),
+    legend.key.height =  unit(10, "mm"),
+    legend.ticks = element_line(
+      colour = "black",
+      linewidth = 1
+    ),
+    legend.ticks.length = unit(5, "mm")
+    )+
+  scale_x_continuous(
+    breaks = seq(-180,180,60),
+    labels = ~paste0(.x, "°"),
+    expand = expansion(add = c(15,0))
+    ) +
+  scale_y_continuous(
+    breaks = seq(-180,180,30),
+    labels = ~paste0(.x, "°")
+    ) +
+  facet_wrap(
+    ~Eta,
+    ncol =1,
+    dir = "v",
+    labeller = as_labeller(~paste0("η = ", .x,"°")),
+    axis.labels = "all",
+    strip.position = "right"
+    )+
+  xlab("ω") +
+  ylab("χ¹")
+
+plot
+
+ggsave(
+  minima_P_surface_output_path,
+  plot, 
+  height = unit(15.92, "cm"),
+  width = unit(15.92, "cm")
+  )
+
+```

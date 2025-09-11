@@ -1,0 +1,9 @@
+!${method} ${basis} PAL16 PrintGap
+
+%method
+	WriteJSONPropertyfile True
+end
+
+%base "${name}"
+
+* xyzfile 0 1 ${input}
