@@ -35,14 +35,24 @@ To reproduce this analysis, you will need:
 
 1. Analysis of the conformational distribution of prolyl residues in the PDB
 
+![Flowchart depicting the data pipeline for the analysis of the prolyl conformational distribution](./Images/PDB_flowchart.png)
+
 2. Preparation of starting geometry
+
+![Flowchart depicting the data pipeline for the preparation of the starting geometry](./Images/Preparation_flowchart.png)
 
 3. Relaxed surface scans
 
+![Flowchart depicting the data pipeline for the solvated 2D relaxed surface scans](./Images/Solvent_scans_flowchart.png)
+
 4. Identification of minimum energy geometries
 
-5. Identification of transition state geometries
+![Flowchart depicting the data pipeline for the identification of minimum energy geometries](./Images/Geometry_Optimisation_flowchart.png)
 
-6. Benchmark of DFT functionals
+6. Identification of transition state geometries
 
+![Flowchart depicting the data pipeline for the identification of transition state geometries](./Images/TS_search_flowchart.png)
 
+8. Benchmark of DFT functionals
+
+![Flowchart depicting the data pipeline for the benchmark of DFT functionals](./Images/Benchmark_Flowchart.png)
