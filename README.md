@@ -32,11 +32,31 @@ To reproduce this analysis, you will need:
 
 ## Usage
 
-1. Analysis of the conformational distribution of prolyl residues in the PDB
+### 1. Analysis of the conformational distribution of prolyl residues in the PDB
 
 ![Flowchart depicting the data pipeline for the analysis of the prolyl conformational distribution](./Images/PDB_flowchart.png)
 
-2. Preparation of starting geometry
+#### 1.1 Prepare proline geometries
+
+1. Select your set of proteins and download their `.pdb` crystallographic coordinates to a dedicated directory. 
+2. Write their PDB ids of the proteins into a newline ("\\n") separated text file (`pisces_pdb_ids.txt`). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
+3. Read the atomic coordinates of the proline residues with `get_prolines.pbs`. `read_proline.awk` must be in the same directory as `get_prolines.pbs`. Set the path to the PDB directory in the script before executing:
+```
+qsub get_prolines.pbs
+```
+4. Use `assemble_prolines.rmd` to pivot `proline_atoms.csv` to a wide format.
+
+#### 1.2 Add adjacent groups
+
+1. Read the atoms from adjacent residues by executing `get_acetyl.pbs`, `get_amide.pbs` and `get_methyl.pbs`. `read_acetyl.awk` must be in the same directory as `get_acetyl.pbs`, `read_amide.awk` must be in the same directory as `get_amide.pbs`, and `read_methyl.awk` must be in the same directory as `get_methyl.pbs`. Each directory must also contain the wide-format proline coordinates (`proline_residues.csv`) . Set the path to the PDB directory in each script before executing:
+```
+qsub get_acetyl.pbs
+qsub get_amide.pbs
+qsub get_methyle.pbs
+```
+2. 
+
+### 2. Preparation of starting geometry
 
 ![Flowchart depicting the data pipeline for the preparation of the starting geometry](./Images/Preparation_flowchart.png)
 
