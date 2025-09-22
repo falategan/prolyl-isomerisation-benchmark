@@ -32,11 +32,11 @@ To reproduce this analysis, you will need:
 
 ## Usage
 
-### 1. Analysis of the conformational distribution of prolyl residues in the PDB
+### Analysis of the conformational distribution of prolyl residues in the PDB
 
 ![Flowchart depicting the data pipeline for the analysis of the prolyl conformational distribution](./Images/PDB_flowchart.png)
 
-#### 1.1 Prepare proline geometries
+#### 1. Prepare proline geometries
 
 1. Select your set of proteins and download their `.pdb` crystallographic coordinates to a dedicated directory. 
 2. Write their PDB ids of the proteins into a newline ("\\n") separated text file (`pisces_pdb_ids.txt`). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
@@ -46,7 +46,7 @@ qsub get_prolines.pbs
 ```
 4. Use the `assemble_prolines.rmd` R notebook to pivot `proline_atoms.csv` to a wide format.
 
-#### 1.2 Add adjacent groups
+#### 2. Add adjacent groups
 
 1. Read the atoms from adjacent residues by executing `get_acetyl.pbs`, `get_amide.pbs` and `get_methyl.pbs`. `read_acetyl.awk` must be in the same directory as `get_acetyl.pbs`, `read_amide.awk` must be in the same directory as `get_amide.pbs`, and `read_methyl.awk` must be in the same directory as `get_methyl.pbs`. Each directory must also contain the wide-format proline coordinates (`proline_residues.csv`) . Set the path to the PDB directory in each script before executing:
 ```
@@ -56,7 +56,7 @@ qsub get_methyl.pbs
 ```
 2. Combine atoms from adjacent residues with the wide-format residue records with the `assemble_AcProNMe.rmd` R notebook. This requires the files for the atomic coordinates of the proline residues (`proline_residues.csv`), and the adjacent groups (`acetyl_atoms.csv`, `amide_atoms.csv` and `methyl_atoms.csv`).
 
-#### 1.3 Convert Cartesian atomic coordinates to internal coordinates
+#### 3. Convert Cartesian atomic coordinates to internal coordinates
 
 Execute `csv2internal.py` to generate internal coordinates for each residue. `csv2internal.py` imports modules from `xyz2internal.py` - ensure this script is included in the environment or working directory. `csv2internal.py` takes three arguments: the path to the Cartesian coordinates (`AcProNMe.csv`), the path to the configuration file defining the internal coordinates (`AcProNMe_internal.config`), and the path for the output (`PDB.intl`)
 
@@ -64,26 +64,64 @@ Execute `csv2internal.py` to generate internal coordinates for each residue. `cs
 python csv2internal.py ./AcProNMe.csv ./AcProNMe_internal.config ./PDB.intl
 ```
 
-#### 1.4 Filter and generate figures of the conformational distribution
+#### 4. Filter and generate figures of the conformational distribution
 
 Use `analyse_pdb.rmd` to analyse the distribution of conformations within the PDB sample (`PDB.intl`).
 
-### 2. Preparation of starting geometry
+### ORCA Computational Chemistry Overview
+
+This repository provides shell scripts for preparation and execution of various ORCA computations (geometry optimisation, 2D relaxed surface scans, 3D relaxed surface scans, transition state searches, DFT single point energies, and CCSD(T) single point energies with CBS extrapolation). 
+
+This scheme simplifies the execution of a large number of ORCA jobs in parallel using the following files:
+- **{task}.inp**: These are template ORCA input files specifying the parameters for a basic ORCA run
+- **{task}.config**: These semicolon-delimited files list the job names, input file paths, and job-specific parameters. Each line provides specifications for a new ORCA run.
+- **orca_template.pbs**: This is a template PBS jobscript from which the jobscripts for all the ORCA jobs are generated. The resulting jobscript specifies the resource assignment for the PBS scheduler, generates a temporary working directory in the (manually) specified location, and initiates the ORCA run.
+- **{task.sh}**: This bash shell script generates output directories, populates the `{task}.inp` and `orca_template.pbs` templates, and submits the jobscript to the PBS job queue for each line in `{task}.config`.
+
+### Preparation of the starting geometry
 
 ![Flowchart depicting the data pipeline for the preparation of the starting geometry](./Images/Preparation_flowchart.png)
 
-3. Relaxed surface scans
+Optimise the geometry of the AcProNHMe crystallographic structure `AcProNHMe_Crystal.xyz` at the r<sup>2</sup>SCAN-3c level of theory by executing `opt_geom.sh`. The script requires a configuration file (`geom_prep.config)` listing the job name and the path to the atomic coordinates separated by a semicolon. Ensure the ORCA geometry optimisation input file (`opt_geom.inp`) and the template jobscript (`orca_template.pbs`) are included in the working directory.
+
+```
+./opt_geom.sh  geom_prep.config
+```
+
+### Solvated relaxed surface scans
 
 ![Flowchart depicting the data pipeline for the solvated 2D relaxed surface scans](./Images/Solvent_scans_flowchart.png)
 
-4. Identification of minimum energy geometries
+1. Execute relaxed surface scans with the `xtb_2D_scan.sh` script, starting at the optimised starting geometry (`AcProNHMe_opt.xyz`).
+
+```
+./xtb_2D_scan.sh solvent_scans.config
+```
+
+The semicolon-delimited configuration file (`solvent_scans.config`) has the following columns:
+```
+Job Name; Path to Starting Geometry; First Scan Coordinate; Second Scan Coordinate; Solvent
+```
+
+The scan coordinates specify the scanning dimension, starting coordinate, end coordinate and number of steps for each scanning dimension in the ORCA `%geom SCAN` format.
+
+2. Convert the Cartesian atomic coordinates of each scan to internal coordinates with `xyz2internal.py`. The script takes three arguments: 1) the path to the atomic coordinates (`xtb_{solvent}_scan.allxyz`), 2) the path to the internal coordinate configuration file (`AcProNHMe_internal.config`), and 3) the output path (`xtb_{solvent}_scan.intl`).
+```
+python xyz2internal.py xtb_{solvent}_scan.allxyz AcProNHMe_internal.config xtb_{solvent}_scan.intl
+```
+
+3. Analyse the surface scans with the `Analyse_solvent_scans.rmd` R notebook. THe notebook requires the internal coordinates for all the surface scans (`xtb_{solvent}_scan.intl`), and the single point energies of each geometry (`xtb_{solvent}_scan.relaxscanact.dat`)
+
+
+### Explore gas-phase reaction paths
+####  Identification of minimum energy geometries
 
 ![Flowchart depicting the data pipeline for the identification of minimum energy geometries](./Images/Geometry_Optimisation_flowchart.png)
 
-6. Identification of transition state geometries
+#### Identification of transition state geometries
 
 ![Flowchart depicting the data pipeline for the identification of transition state geometries](./Images/TS_search_flowchart.png)
 
-8. Benchmark of DFT functionals
+### Benchmark of DFT functionals
 
 ![Flowchart depicting the data pipeline for the benchmark of DFT functionals](./Images/Benchmark_Flowchart.png)
