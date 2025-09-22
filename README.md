@@ -44,7 +44,7 @@ To reproduce this analysis, you will need:
 ```
 qsub get_prolines.pbs
 ```
-4. Use `assemble_prolines.rmd` to pivot `proline_atoms.csv` to a wide format.
+4. Use the `assemble_prolines.rmd` R notebook to pivot `proline_atoms.csv` to a wide format.
 
 #### 1.2 Add adjacent groups
 
@@ -52,9 +52,21 @@ qsub get_prolines.pbs
 ```
 qsub get_acetyl.pbs
 qsub get_amide.pbs
-qsub get_methyle.pbs
+qsub get_methyl.pbs
 ```
-2. 
+2. Combine atoms from adjacent residues with the wide-format residue records with the `assemble_AcProNMe.rmd` R notebook. This requires the files for the atomic coordinates of the proline residues (`proline_residues.csv`), and the adjacent groups (`acetyl_atoms.csv`, `amide_atoms.csv` and `methyl_atoms.csv`).
+
+#### 1.3 Convert Cartesian atomic coordinates to internal coordinates
+
+Execute `csv2internal.py` to generate internal coordinates for each residue. `csv2internal.py` imports modules from `xyz2internal.py` - ensure this script is included in the environment or working directory. `csv2internal.py` takes three arguments: the path to the Cartesian coordinates (`AcProNMe.csv`), the path to the configuration file defining the internal coordinates (`AcProNMe_internal.config`), and the path for the output (`PDB.intl`)
+
+```
+python csv2internal.py ./AcProNMe.csv ./AcProNMe_internal.config ./PDB.intl
+```
+
+#### 1.4 Filter and generate figures of the conformational distribution
+
+Use `analyse_pdb.rmd` to analyse the distribution of conformations within the PDB sample (`PDB.intl`).
 
 ### 2. Preparation of starting geometry
 
