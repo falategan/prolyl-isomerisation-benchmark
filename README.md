@@ -92,7 +92,9 @@ Optimise the geometry of the AcProNHMe crystallographic structure `AcProNHMe_Cry
 
 ![Flowchart depicting the data pipeline for the solvated 2D relaxed surface scans](./Images/Solvent_scans_flowchart.png)
 
-1. Execute relaxed surface scans with the `xtb_2D_scan.sh` script, starting at the optimised starting geometry (`AcProNHMe_opt.xyz`).
+#### 1. Execute relaxed surface scans 
+
+Run the `xtb_2D_scan.sh` script, starting at the optimised starting geometry (`AcProNHMe_opt.xyz`).
 
 ```
 ./xtb_2D_scan.sh solvent_scans.config
@@ -105,18 +107,23 @@ Job Name; Path to Starting Geometry; First Scan Coordinate; Second Scan Coordina
 
 The scan coordinates specify the scanning dimension, starting coordinate, end coordinate and number of steps for each scanning dimension in the ORCA `%geom SCAN` format.
 
-2. Convert the Cartesian atomic coordinates of each scan to internal coordinates with `xyz2internal.py`. The script takes three arguments: 1) the path to the atomic coordinates (`xtb_{solvent}_scan.allxyz`), 2) the path to the internal coordinate configuration file (`AcProNHMe_internal.config`), and 3) the output path (`xtb_{solvent}_scan.intl`).
+#### 2. Convert the Cartesian atomic coordinates to internal coordinates
+
+Use `xyz2internal.py` to generate internal coordinates for each scan. The script takes three arguments: 1) the path to the atomic coordinates (`xtb_{solvent}_scan.allxyz`), 2) the path to the internal coordinate configuration file (`AcProNHMe_internal.config`), and 3) the output path (`xtb_{solvent}_scan.intl`).
 ```
 python xyz2internal.py xtb_{solvent}_scan.allxyz AcProNHMe_internal.config xtb_{solvent}_scan.intl
 ```
 
-3. Analyse the surface scans with the `Analyse_solvent_scans.rmd` R notebook. THe notebook requires the internal coordinates for all the surface scans (`xtb_{solvent}_scan.intl`), and the single point energies of each geometry (`xtb_{solvent}_scan.relaxscanact.dat`)
+#### 3. Analyse the surface scans 
+Use the `Analyse_solvent_scans.rmd` R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans (`xtb_{solvent}_scan.intl`), and the single point energies of each geometry (`xtb_{solvent}_scan.relaxscanact.dat`)
 
 
 ### Explore gas-phase reaction paths
 ####  Identification of minimum energy geometries
 
 ![Flowchart depicting the data pipeline for the identification of minimum energy geometries](./Images/Geometry_Optimisation_flowchart.png)
+
+
 
 #### Identification of transition state geometries
 
