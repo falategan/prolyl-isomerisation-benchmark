@@ -150,6 +150,25 @@ python xyz2internal.py minima_rev_scan.allxyz AcProNHMe_internal.config minima_r
 
 Use the `minima_scans.rmd` R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans (`minima_fwd_scan.intl`/`minima_rev_scan.intl`), and the single point energies of each geometry (`minima_fwd_scan.relaxscanact.dat`/`minima_rev_scan.relaxscanact.dat`)
 
+##### 4. Optimise local minima
+
+Optimise the geometry of the approximate local minima (`minima_fwd_scan.940.xyz`/`minima_fwd_scan.1524.xyz`/`minima_fwd_scan.44007.xyz`/`minima_fwd_scan.44678.xyz`) at the R<sup>2</sup>SCAN-3c level op theory by executing `opt-geom.sh`.
+
+```
+./opt_geom.sh opt_minima.config
+```
+
+##### 5. Convert the Cartesian atomic coordinates to internal coordinates
+
+Generate internal coordinates for the optimised local minima.
+
+```
+python xyz2internal.py minima_fwd_scan.940.xyz AcProNHMe_internal.config transG_g-endo.intl
+python xyz2internal.py minima_fwd_scan.1534.xyz AcProNHMe_internal.config transG_g-exo.intl
+python xyz2internal.py minima_fwd_scan.44007.xyz AcProNHMe_internal.config cisD_g-exo.intl
+python xyz2internal.py minima_fwd_scan.44678.xyz AcProNHMe_internal.config cisA_g-endo.intl
+```
+
 #### Identification of transition state geometries
 
 ![Flowchart depicting the data pipeline for the identification of transition state geometries](./Images/TS_search_flowchart.png)
