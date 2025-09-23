@@ -139,7 +139,16 @@ Execute `xtb_3d_scans.sh` to scan the _trans_ confromational landscape starting 
 Job Name; Path to Starting Geometry; First Scanning Coordinate; Second Scanning Coordinate; Third Scanning Coordinate
 ``
 
+##### 2. Convert the Cartesian atomic coordinates to internal coordinates
 
+```
+python xyz2internal.py minima_fwd_scan.allxyz AcProNHMe_internal.config minima_fwd_scan.intl
+python xyz2internal.py minima_rev_scan.allxyz AcProNHMe_internal.config minima_rev_scan.intl
+```
+
+##### 3. Identify local minima
+
+Use the `minima_scans.rmd` R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans (`minima_fwd_scan.intl`/`minima_rev_scan.intl`), and the single point energies of each geometry (`minima_fwd_scan.relaxscanact.dat`/`minima_rev_scan.relaxscanact.dat`)
 
 #### Identification of transition state geometries
 
