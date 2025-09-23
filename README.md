@@ -214,4 +214,12 @@ Use the `Analyse_TS_scans.rmd` R notebook to plot the results and identify saddl
 
 ### Benchmark of DFT functionals
 
-![Flowchart depicting the data pipeline for the benchmark of DFT functionals](./Images/Benchmark_Flowchart.png)
+![Flowchart depicting the data pipeline for the benchmark of DFT functionals](./Images/Benchmark_Flowchart.png)\
+
+#### Calculate CCSD(T)/CBS single point energies
+
+
+#### Calculate DFT single point energies
+
+
+#### Analyse the accuracy of each DFT functional
