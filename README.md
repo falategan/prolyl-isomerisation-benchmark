@@ -85,7 +85,7 @@ This scheme simplifies the execution of a large number of ORCA jobs in parallel 
 
 ![Flowchart depicting the data pipeline for the preparation of the starting geometry](./Images/Preparation_flowchart.png)
 
-Optimise the geometry of the AcProNHMe crystallographic structure `AcProNHMe_Crystal.xyz` at the r<sup>2</sup>SCAN-3c level of theory by executing `opt_geom.sh`. The script requires a configuration file (`geom_prep.config)` listing the job name and the path to the atomic coordinates separated by a semicolon. Ensure the ORCA geometry optimisation input file (`opt_geom.inp`) and the template jobscript (`orca_template.pbs`) are included in the working directory.
+Optimise the geometry of the AcProNHMe crystallographic structure `AcProNHMe_Crystal.xyz` at the r<sup>2</sup>SCAN-3c level of theory by executing `opt_geom.sh`. The script requires a configuration file (`geom_prep.config)` listing the job name and the path to the atomic coordinates separated by a semicolon. Ensure the ORCA geometry optimisation input file (`opt_geom.inp`) and the template jobscript (`orca_template.pbs`) are included in the working directory or PATH variables.
 
 ```
 ./opt_geom.sh  geom_prep.config
@@ -131,6 +131,13 @@ Use the `Analyse_solvent_scans.rmd` R notebook to plot the results and identify 
 ####  Identification of minimum energy geometries
 
 ![Flowchart depicting the data pipeline for the identification of minimum energy geometries](./Images/Geometry_Optimisation_flowchart.png)
+
+##### 1. _Trans_ relaxed surface scans
+
+Execute `xtb_3d_scans.sh` to scan the _trans_ confromational landscape starting with the initial optimised geometry (`AcProNHMe_opt.xyz`). The configuration file (`minima_scans.config`) has the following columns:
+``
+Job Name; Path to Starting Geometry; First Scanning Coordinate; Second Scanning Coordinate; Third Scanning Coordinate
+``
 
 
 
