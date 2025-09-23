@@ -58,7 +58,10 @@ qsub get_methyl.pbs
 
 #### 3. Convert Cartesian atomic coordinates to internal coordinates
 
-Execute `csv2internal.py` to generate internal coordinates for each residue. `csv2internal.py` imports modules from `xyz2internal.py` - ensure this script is included in the environment or working directory. `csv2internal.py` takes three arguments: the path to the Cartesian coordinates (`AcProNMe.csv`), the path to the configuration file defining the internal coordinates (`AcProNMe_internal.config`), and the path for the output (`PDB.intl`)
+Execute `csv2internal.py` to generate internal coordinates for each residue. `csv2internal.py` imports modules from `xyz2internal.py` - ensure this script is included in the environment or working directory. `csv2internal.py` takes three arguments: 
+1) the path to the Cartesian coordinates (`AcProNMe.csv`)
+2) the path to the configuration file defining the internal coordinates (`AcProNMe_internal.config`)
+3) the path for the output (`PDB.intl`)
 
 ```
 python csv2internal.py ./AcProNMe.csv ./AcProNMe_internal.config ./PDB.intl
@@ -109,13 +112,18 @@ The scan coordinates specify the scanning dimension, starting coordinate, end co
 
 #### 2. Convert the Cartesian atomic coordinates to internal coordinates
 
-Use `xyz2internal.py` to generate internal coordinates for each scan. The script takes three arguments: 1) the path to the atomic coordinates (`xtb_{solvent}_scan.allxyz`), 2) the path to the internal coordinate configuration file (`AcProNHMe_internal.config`), and 3) the output path (`xtb_{solvent}_scan.intl`).
+Use `xyz2internal.py` to generate internal coordinates for each scan. The script takes three arguments: 
+1) the path to the atomic coordinates (`xtb_{solvent}_scan.allxyz`),
+2) the path to the internal coordinate configuration file (`AcProNHMe_internal.config`)
+3) the output path (`xtb_{solvent}_scan.intl`).
+
 ```
 python xyz2internal.py xtb_{solvent}_scan.allxyz AcProNHMe_internal.config xtb_{solvent}_scan.intl
 ```
 
 #### 3. Analyse the surface scans 
 Use the `Analyse_solvent_scans.rmd` R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans (`xtb_{solvent}_scan.intl`), and the single point energies of each geometry (`xtb_{solvent}_scan.relaxscanact.dat`)
+
 
 
 ### Explore gas-phase reaction paths
