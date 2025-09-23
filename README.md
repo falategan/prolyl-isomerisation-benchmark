@@ -134,7 +134,14 @@ Use the `Analyse_solvent_scans.rmd` R notebook to plot the results and identify 
 
 ##### 1. _Trans_ relaxed surface scans
 
-Execute `xtb_3d_scans.sh` to scan the _trans_ confromational landscape starting with the initial optimised geometry (`AcProNHMe_opt.xyz`). The configuration file (`minima_scans.config`) has the following columns:
+Execute `xtb_3d_scans.sh` to scan the _trans_ conformational landscape starting with the initial optimised geometry (`AcProNHMe_opt.xyz`).
+
+
+```
+./xtb_3d_scans.sh minima_scans.config
+```
+
+The configuration file (`minima_scans.config`) has the following columns:
 ```
 Job Name; Path to Starting Geometry; First Scanning Coordinate; Second Scanning Coordinate; Third Scanning Coordinate
 ```
@@ -173,9 +180,17 @@ python xyz2internal.py minima_fwd_scan.44678.xyz AcProNHMe_internal.config cisA_
 
 Use the `Analyse_minima.rmd` R notebook to calculate puckering coordinates and tabulate the properties of the local minimum geometries. This notebook requires the internal coordinates of all optimised minima (`transG_g-endo.intl`/`transG_g-exo.intl`/`cisD_g-exo.intl`/`cisA_g-endo.intl`) and their ORCA property files (`minima_fwd_scan.940.property.json`/`minima_fwd_scan.1534.property.json`/`minima_fwd_scan.44007.property.json`/`minima_fwd_scan.44678.property.json`).
 
-#### Identification of transition state geometries
+#### Identification of gas-phase transition state geometries
 
 ![Flowchart depicting the data pipeline for the identification of transition state geometries](./Images/TS_search_flowchart.png)
+
+##### 1. Isomerisation path relaxed surface scans
+
+Execute `xtb_3d_scans.sh` to scan the conformational landscape between the _cis_ and _trans_ isomeric states, starting with the initial optimised geometry (`AcProNHMe_opt.xyz`). 
+
+```
+
+```
 
 ### Benchmark of DFT functionals
 
