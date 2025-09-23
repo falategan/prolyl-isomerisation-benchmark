@@ -95,6 +95,8 @@ Optimise the geometry of the AcProNHMe crystallographic structure `AcProNHMe_Cry
 
 ![Flowchart depicting the data pipeline for the solvated 2D relaxed surface scans](./Images/Solvent_scans_flowchart.png)
 
+This section makes use of the initial optimised geometry generate in the section [[Preparation of the starting geometry]] above.
+
 #### 1. Execute relaxed surface scans 
 
 Run the `xtb_2D_scan.sh` script, starting at the optimised starting geometry (`AcProNHMe_opt.xyz`).
@@ -128,6 +130,9 @@ Use the `Analyse_solvent_scans.rmd` R notebook to plot the results and identify 
 
 
 ### Explore gas-phase reaction paths
+
+This section makes use of the initial optimised geometry generate in the section [[Preparation of the starting geometry]] above.
+
 ####  Identification of minimum energy geometries
 
 ![Flowchart depicting the data pipeline for the identification of minimum energy geometries](./Images/Geometry_Optimisation_flowchart.png)
