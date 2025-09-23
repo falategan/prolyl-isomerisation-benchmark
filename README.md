@@ -169,6 +169,10 @@ python xyz2internal.py minima_fwd_scan.44007.xyz AcProNHMe_internal.config cisD_
 python xyz2internal.py minima_fwd_scan.44678.xyz AcProNHMe_internal.config cisA_g-endo.intl
 ```
 
+##### 6. Characterise local minima
+
+Use the `Analyse_minima.rmd` R notebook to calculate puckering coordinates and tabulate the properties of the local minimum geometries. This notebook requires the internal coordinates of all optimised minima (`transG_g-endo.intl`/`transG_g-exo.intl`/`cisD_g-exo.intl`/`cisA_g-endo.intl`) and their ORCA property files (`minima_fwd_scan.940.property.json`/`minima_fwd_scan.1534.property.json`/`minima_fwd_scan.44007.property.json`/`minima_fwd_scan.44678.property.json`).
+
 #### Identification of transition state geometries
 
 ![Flowchart depicting the data pipeline for the identification of transition state geometries](./Images/TS_search_flowchart.png)
