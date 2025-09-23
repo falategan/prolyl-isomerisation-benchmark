@@ -113,15 +113,16 @@ The scan coordinates specify the scanning dimension, starting coordinate, end co
 #### 2. Convert the Cartesian atomic coordinates to internal coordinates
 
 Use `xyz2internal.py` to generate internal coordinates for each scan. The script takes three arguments: 
-1) the path to the atomic coordinates (`xtb_{solvent}_scan.allxyz`),
+1) the path to the atomic coordinates (`xtb_H2O_scan.allxyz`/`xtb_CHCl3_scan.allxyz`/`xtb_DMF_scan.allxyz`/`xtb_gas_scan.allxyz`),
 2) the path to the internal coordinate configuration file (`AcProNHMe_internal.config`)
-3) the output path (`xtb_{solvent}_scan.intl`).
+3) the output path (`xtb_H2O_scan.intl`/`xtb_CHCl3_scan.intl`/`xtb_DMF_scan.intl`/`xtb_gas_scan.intl`).
 
 ```
 python xyz2internal.py xtb_{solvent}_scan.allxyz AcProNHMe_internal.config xtb_{solvent}_scan.intl
 ```
 
 #### 3. Analyse the surface scans 
+
 Use the `Analyse_solvent_scans.rmd` R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans (`xtb_{solvent}_scan.intl`), and the single point energies of each geometry (`xtb_{solvent}_scan.relaxscanact.dat`)
 
 
