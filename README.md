@@ -189,8 +189,23 @@ Use the `Analyse_minima.rmd` R notebook to calculate puckering coordinates and t
 Execute `xtb_3d_scans.sh` to scan the conformational landscape between the _cis_ and _trans_ isomeric states, starting with the initial optimised geometry (`AcProNHMe_opt.xyz`). 
 
 ```
+./xtb_3d_scans.sh TS_scans.config
+```
+
+##### 2. Convert the Cartesian atomic coordinates to internal coordinates
 
 ```
+python xyz2internal.py TS_ff_scan.allxyz AcProNHMe_internal.config TS_ff_scan.intl
+python xyz2internal.py TS_fr_scan.allxyz AcProNHMe_internal.config TS_fr_scan.intl
+python xyz2internal.py TS_rf_scan.allxyz AcProNHMe_internal.config TS_rf_scan.intl
+python xyz2internal.py TS_rr_scan.allxyz AcProNHMe_internal.config TS_rr_scan.intl
+```
+
+##### 3. Identify candidate transition states
+
+Use the `Analyse_TS_scans.rmd` R notebook to plot the results and identify saddle points. The notebook requires the internal coordinates for all the surface scans (`TS_ff_scan.intl`/`TS_fr_scan.intl`/`TS_rf_scan.intl`/`TS_rr_scan.intl`), and the single point energies of each geometry (`TS_ff_scan.relaxscanact.dat`/`TS_fr_scan.relaxscanact.dat`/`TS_rf_scan.relaxscanact.dat`/`TS_rr_scan.relaxscanact.dat`).
+
+##### 4. Optimise candidate transition states
 
 ### Benchmark of DFT functionals
 
