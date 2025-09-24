@@ -58,7 +58,7 @@ qsub get_methyl.pbs
 
 #### 3. Convert Cartesian atomic coordinates to internal coordinates
 
-Execute `csv2internal.py` to generate internal coordinates for each residue. `csv2internal.py` imports modules from `xyz2internal.py` - ensure this script is included in the environment or working directory. `csv2internal.py` takes three arguments: 
+Execute `csv2internal.py` to generate internal coordinates for each residue. `csv2internal.py` imports modules from `xyz2internal.py`. Ensure this script is included in the environment or working directory. `csv2internal.py` takes three arguments: 
 1) the path to the Cartesian coordinates (`AcProNMe.csv`)
 2) the path to the configuration file defining the internal coordinates (`AcProNMe_internal.config`)
 3) the path for the output (`PDB.intl`)
@@ -215,7 +215,7 @@ Use the `Analyse_TS_scans.rmd` R notebook to plot the results and identify saddl
 ```shell
 ./TS_search.sh TS_search.config
 ```
-The shell script ([TS_search.sh](Scripts/Transition-State-Searches/TS_search.sh)) requires the transition state search input file ([TS_search.inp](Scripts/Transition-State-Searches/TS_search.inp)), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the configuration file ([TS_search.config](Scripts/Transition-State-Searches/TS_search.config)) in the working directory or PATH variables. The configuration file has the following columns:
+The shell script ([TS_search.sh](<Scripts/Transition State Searches/TS_search.sh>)) requires the transition state search input file ([TS_search.inp](<Scripts/Transition State Searches/TS_search.inp>)), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the configuration file ([TS_search.config](<Scripts/Transition State Searches/TS_search.config>)) in the working directory or PATH variables. The configuration file has the following columns:
 
 ```csvs
 Job Name; Path to Input Geometry
