@@ -215,7 +215,7 @@ Use the `Analyse_TS_scans.rmd` R notebook to plot the results and identify saddl
 ```shell
 ./TS_search.sh TS_search.config
 ```
-The shell script ([TS_search.sh](Scripts/Transition-State-Searches/TS_search.sh) requires the transition state search input file ([TS_search.inp](Scripts/Transition-State-Searches/TS_search.inp), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the configuration file ([TS_search.config](Scripts/Transition-State-Searches/TS_search.config)) in the working directory or PATH variables. The configuration file has the following columns:
+The shell script ([TS_search.sh](Scripts/Transition-State-Searches/TS_search.sh) requires the transition state search input file ([TS_search.inp](Scripts/Transition-State-Searches/TS_search.inp)), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the configuration file ([TS_search.config](Scripts/Transition-State-Searches/TS_search.config)) in the working directory or PATH variables. The configuration file has the following columns:
 
 ```csvs
 Job Name; Path to Input Geometry
