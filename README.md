@@ -223,3 +223,6 @@ Use the `Analyse_TS_scans.rmd` R notebook to plot the results and identify saddl
 
 
 #### Analyse the accuracy of each DFT functional
+
+## License
+![License](LICENSE)
