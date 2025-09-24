@@ -39,7 +39,7 @@ To reproduce this analysis, you will need:
 #### 1. Prepare proline geometries
 
 1. Select your set of proteins and download their `.pdb` crystallographic coordinates to a dedicated directory. 
-2. Write their PDB ids of the proteins into a newline ("\\n") separated text file [pisces_pdb_ids.txt](./Data/PDB-Conformations/pisces_pdb_ids.txt). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
+2. Write their PDB ids of the proteins into a newline ("\\n") separated text file ([pisces_pdb_ids.txt](./Data/PDB-Conformations/pisces_pdb_ids.txt)). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
 3. Read the atomic coordinates of the proline residues with [get_prolines.pbs](Scripts/PDB/get_prolines.pbs). [read_proline.awk](Scripts/PDB/read_proline.awk) must be in the same directory as [get_prolines.pbs](Scripts/PDB/get_prolines.pbs). Set the path to the PDB directory in the script before executing:
 ```shell
 qsub get_prolines.pbs
@@ -48,7 +48,7 @@ qsub get_prolines.pbs
 
 #### 2. Add adjacent groups
 
-1. Read the atoms from adjacent residues by executing `get_acetyl.pbs`, `get_amide.pbs` and `get_methyl.pbs`. `read_acetyl.awk` must be in the same directory as `get_acetyl.pbs`, `read_amide.awk` must be in the same directory as `get_amide.pbs`, and `read_methyl.awk` must be in the same directory as `get_methyl.pbs`. Each directory must also contain the wide-format proline coordinates (`proline_residues.csv`) . Set the path to the PDB directory in each script before executing:
+1. Read the atoms from adjacent residues by executing [get_acetyl.pbs](Scripts/PDB/get_acetyl.pbs), `[get_amide.pbs](Scripts/PDB/get_amide.pbs)` and `[get_methyl.pbs](Scripts/PDB/get_methyl.pbs)`. `[read_acetyl.awk](Scripts/PDB/read_acetyl.awk)` must be in the same directory as `get_acetyl.pbs`, `read_amide.awk` must be in the same directory as `get_amide.pbs`, and `read_methyl.awk` must be in the same directory as `get_methyl.pbs`. Each directory must also contain the wide-format proline coordinates (`proline_residues.csv`) . Set the path to the PDB directory in each script before executing:
 ```shell
 qsub get_acetyl.pbs
 qsub get_amide.pbs
