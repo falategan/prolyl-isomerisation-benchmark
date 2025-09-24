@@ -39,7 +39,7 @@ To reproduce this analysis, you will need:
 #### 1. Prepare proline geometries
 
 1. Select your set of proteins and download their `.pdb` crystallographic coordinates to a dedicated directory. 
-2. Write their PDB ids of the proteins into a newline ("\\n") separated text file (`pisces_pdb_ids.txt`). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
+2. Write their PDB ids of the proteins into a newline ("\\n") separated text file ([pisces_pdb_ids.txt](Data/pisces_pdb_ids.txt). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
 3. Read the atomic coordinates of the proline residues with `get_prolines.pbs`. `read_proline.awk` must be in the same directory as `get_prolines.pbs`. Set the path to the PDB directory in the script before executing:
 ```shell
 qsub get_prolines.pbs
