@@ -48,13 +48,13 @@ qsub get_prolines.pbs
 
 #### 2. Add adjacent groups
 
-1. Read the atoms from adjacent residues by executing [get_acetyl.pbs](Scripts/PDB/get_acetyl.pbs), [get_amide.pbs](Scripts/PDB/get_amide.pbs) and [get_methyl.pbs](Scripts/PDB/get_methyl.pbs). [read_acetyl.awk](Scripts/PDB/read_acetyl.awk) must be in the same directory as `get_acetyl.pbs`, `read_amide.awk` must be in the same directory as `get_amide.pbs`, and `read_methyl.awk` must be in the same directory as `get_methyl.pbs`. Each directory must also contain the wide-format proline coordinates (`proline_residues.csv`) . Set the path to the PDB directory in each script before executing:
+1. Read the atoms from adjacent residues by executing [get_acetyl.pbs](Scripts/PDB/get_acetyl.pbs), [get_amide.pbs](Scripts/PDB/get_amide.pbs) and [get_methyl.pbs](Scripts/PDB/get_methyl.pbs). [read_acetyl.awk](Scripts/PDB/read_acetyl.awk), [read_amide.awk](Scripts/PDB/read_amide.awk),and [read_methyl.awk](Scripts/PDB/read_methyl.awk) must be in the same directory as their respective pbs scripts. Each directory must also contain the wide-format proline coordinates (`proline_residues.csv`) . Set the path to the PDB directory in each script before executing:
 ```shell
 qsub get_acetyl.pbs
 qsub get_amide.pbs
 qsub get_methyl.pbs
 ```
-2. Combine atoms from adjacent residues with the wide-format residue records with the `assemble_AcProNMe.rmd` R notebook. This requires the files for the atomic coordinates of the proline residues (`proline_residues.csv`), and the adjacent groups (`acetyl_atoms.csv`, `amide_atoms.csv` and `methyl_atoms.csv`).
+2. Combine atoms from adjacent residues with the wide-format residue records with the [assemble_AcProNMe.rmd](Scripts/PDB/assemble_AcProNMe.rmd) R notebook. This requires the files for the atomic coordinates of the proline residues (`proline_residues.csv`), and the adjacent groups (`acetyl_atoms.csv`, `amide_atoms.csv` and `methyl_atoms.csv`).
 
 #### 3. Convert Cartesian atomic coordinates to internal coordinates
 
