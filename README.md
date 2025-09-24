@@ -220,7 +220,15 @@ The shell script ([TS_search.sh](<Scripts/Transition State Searches/TS_search.sh
 ```csvs
 Job Name; Path to Input Geometry
 ```
+##### 5. High-resolution surface scans near unsuccessful candidates
 
+##### 6. Identify new candidate transition states
+
+##### 7. Optimise new candidate transition states
+
+##### 8. Convert the Cartesian atomic coordinates to internal coordinates
+
+##### 9. Characterise transition states
 
 ### Benchmark of DFT functionals
 
