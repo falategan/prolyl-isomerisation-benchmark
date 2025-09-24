@@ -41,7 +41,7 @@ To reproduce this analysis, you will need:
 1. Select your set of proteins and download their `.pdb` crystallographic coordinates to a dedicated directory. 
 2. Write their PDB ids of the proteins into a newline ("\\n") separated text file (`pisces_pdb_ids.txt`). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
 3. Read the atomic coordinates of the proline residues with `get_prolines.pbs`. `read_proline.awk` must be in the same directory as `get_prolines.pbs`. Set the path to the PDB directory in the script before executing:
-```
+```shell
 qsub get_prolines.pbs
 ```
 4. Use the `assemble_prolines.rmd` R notebook to pivot `proline_atoms.csv` to a wide format.
@@ -49,7 +49,7 @@ qsub get_prolines.pbs
 #### 2. Add adjacent groups
 
 1. Read the atoms from adjacent residues by executing `get_acetyl.pbs`, `get_amide.pbs` and `get_methyl.pbs`. `read_acetyl.awk` must be in the same directory as `get_acetyl.pbs`, `read_amide.awk` must be in the same directory as `get_amide.pbs`, and `read_methyl.awk` must be in the same directory as `get_methyl.pbs`. Each directory must also contain the wide-format proline coordinates (`proline_residues.csv`) . Set the path to the PDB directory in each script before executing:
-```
+```shell
 qsub get_acetyl.pbs
 qsub get_amide.pbs
 qsub get_methyl.pbs
@@ -63,7 +63,7 @@ Execute `csv2internal.py` to generate internal coordinates for each residue. `cs
 2) the path to the configuration file defining the internal coordinates (`AcProNMe_internal.config`)
 3) the path for the output (`PDB.intl`)
 
-```
+```shell
 python csv2internal.py ./AcProNMe.csv ./AcProNMe_internal.config ./PDB.intl
 ```
 
@@ -87,7 +87,7 @@ This scheme simplifies the execution of a large number of ORCA jobs in parallel 
 
 Optimise the geometry of the AcProNHMe crystallographic structure `AcProNHMe_Crystal.xyz` at the r<sup>2</sup>SCAN-3c level of theory by executing `opt_geom.sh`. The script requires a configuration file (`geom_prep.config)` listing the job name and the path to the atomic coordinates separated by a semicolon. Ensure the ORCA geometry optimisation input file (`opt_geom.inp`) and the template jobscript (`orca_template.pbs`) are included in the working directory or PATH variables.
 
-```
+```shell
 ./opt_geom.sh  geom_prep.config
 ```
 
@@ -101,7 +101,7 @@ This section makes use of the initial optimised geometry generate in the [Prepar
 
 Run the `xtb_2D_scan.sh` script, starting at the optimised starting geometry (`AcProNHMe_opt.xyz`).
 
-```
+```shell
 ./xtb_2D_scan.sh solvent_scans.config
 ```
 
@@ -119,7 +119,7 @@ Use `xyz2internal.py` to generate internal coordinates for each scan. The script
 2) the path to the internal coordinate configuration file (`AcProNHMe_internal.config`)
 3) the output path (`xtb_H2O_scan.intl`/`xtb_CHCl3_scan.intl`/`xtb_DMF_scan.intl`/`xtb_gas_scan.intl`).
 
-```
+```shell
 python xyz2internal.py xtb_{solvent}_scan.allxyz AcProNHMe_internal.config xtb_{solvent}_scan.intl
 ```
 
@@ -166,7 +166,7 @@ Use the `minima_scans.rmd` R notebook to plot the results and identify local min
 
 Optimise the geometry of the approximate local minima (`minima_fwd_scan.940.xyz`/`minima_fwd_scan.1524.xyz`/`minima_fwd_scan.44007.xyz`/`minima_fwd_scan.44678.xyz`) at the R<sup>2</sup>SCAN-3c level op theory by executing `opt-geom.sh`.
 
-```
+```shell
 ./opt_geom.sh opt_minima.config
 ```
 
@@ -174,7 +174,7 @@ Optimise the geometry of the approximate local minima (`minima_fwd_scan.940.xyz`
 
 Generate internal coordinates for the optimised local minima.
 
-```
+```shell
 python xyz2internal.py minima_fwd_scan.940.xyz AcProNHMe_internal.config transG_g-endo.intl
 python xyz2internal.py minima_fwd_scan.1534.xyz AcProNHMe_internal.config transG_g-exo.intl
 python xyz2internal.py minima_fwd_scan.44007.xyz AcProNHMe_internal.config cisD_g-exo.intl
@@ -193,13 +193,13 @@ Use the `Analyse_minima.rmd` R notebook to calculate puckering coordinates and t
 
 Execute `xtb_3d_scans.sh` to scan the conformational landscape between the _cis_ and _trans_ isomeric states, starting with the initial optimised geometry (`AcProNHMe_opt.xyz`). 
 
-```
+```shell
 ./xtb_3d_scans.sh TS_scans.config
 ```
 
 ##### 2. Convert the Cartesian atomic coordinates to internal coordinates
 
-```
+```shell
 python xyz2internal.py TS_ff_scan.allxyz AcProNHMe_internal.config TS_ff_scan.intl
 python xyz2internal.py TS_fr_scan.allxyz AcProNHMe_internal.config TS_fr_scan.intl
 python xyz2internal.py TS_rf_scan.allxyz AcProNHMe_internal.config TS_rf_scan.intl
