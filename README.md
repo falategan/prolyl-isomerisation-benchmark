@@ -164,7 +164,7 @@ Use the `minima_scans.rmd` R notebook to plot the results and identify local min
 
 ##### 4. Optimise local minima
 
-Optimise the geometry of the approximate local minima (`minima_fwd_scan.940.xyz`/`minima_fwd_scan.1524.xyz`/`minima_fwd_scan.44007.xyz`/`minima_fwd_scan.44678.xyz`) at the R<sup>2</sup>SCAN-3c level op theory by executing `opt-geom.sh`.
+Optimise the geometry of the approximate local minima (`minima_fwd_scan.940.xyz`/`minima_fwd_scan.1524.xyz`/`minima_fwd_scan.44007.xyz`/`minima_fwd_scan.44678.xyz`) at the r<sup>2</sup>SCAN-3c level op theory by executing `opt-geom.sh`.
 
 ```shell
 ./opt_geom.sh opt_minima.config
@@ -211,6 +211,16 @@ python xyz2internal.py TS_rr_scan.allxyz AcProNHMe_internal.config TS_rr_scan.in
 Use the `Analyse_TS_scans.rmd` R notebook to plot the results and identify saddle points. The notebook requires the internal coordinates for all the surface scans (`TS_ff_scan.intl`/`TS_fr_scan.intl`/`TS_rf_scan.intl`/`TS_rr_scan.intl`), and the single point energies of each geometry (`TS_ff_scan.relaxscanact.dat`/`TS_fr_scan.relaxscanact.dat`/`TS_rf_scan.relaxscanact.dat`/`TS_rr_scan.relaxscanact.dat`).
 
 ##### 4. Optimise candidate transition states
+
+```shell
+./TS_search.sh TS_search.config
+```
+The shell script ([TS_search.sh](Scripts/Transition-State-Searches/TS_search.sh) requires the transition state search input file ([TS_search.inp](Scripts/Transition-State-Searches/TS_search.inp), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the configuration file ([TS_search.config](Scripts/Transition-State-Searches/TS_search.config)) in the working directory or PATH variables. The configuration file has the following columns:
+
+```csvs
+Job Name; Path to Input Geometry
+```
+
 
 ### Benchmark of DFT functionals
 
