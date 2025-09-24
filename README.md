@@ -106,7 +106,7 @@ Run the `xtb_2D_scan.sh` script, starting at the optimised starting geometry (`A
 ```
 
 The semicolon-delimited configuration file (`solvent_scans.config`) has the following columns:
-```
+```csvs
 Job Name; Path to Starting Geometry; First Scan Coordinate; Second Scan Coordinate; Solvent
 ```
 
@@ -142,18 +142,18 @@ This section makes use of the initial optimised geometry generate in the [Prepar
 Execute `xtb_3d_scans.sh` to scan the _trans_ conformational landscape starting with the initial optimised geometry (`AcProNHMe_opt.xyz`).
 
 
-```
+```shell
 ./xtb_3d_scans.sh minima_scans.config
 ```
 
 The configuration file (`minima_scans.config`) has the following columns:
-```
+```csvs
 Job Name; Path to Starting Geometry; First Scanning Coordinate; Second Scanning Coordinate; Third Scanning Coordinate
 ```
 
 ##### 2. Convert the Cartesian atomic coordinates to internal coordinates
 
-```
+```shell
 python xyz2internal.py minima_fwd_scan.allxyz AcProNHMe_internal.config minima_fwd_scan.intl
 python xyz2internal.py minima_rev_scan.allxyz AcProNHMe_internal.config minima_rev_scan.intl
 ```
