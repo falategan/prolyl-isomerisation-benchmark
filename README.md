@@ -40,11 +40,11 @@ To reproduce this analysis, you will need:
 
 1. Select your set of proteins and download their `.pdb` crystallographic coordinates to a dedicated directory. 
 2. Write their PDB ids of the proteins into a newline ("\\n") separated text file [pisces_pdb_ids.txt](./Data/PDB-Conformations/pisces_pdb_ids.txt). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
-3. Read the atomic coordinates of the proline residues with [get_prolines.pbs](Scripts/PDB/get_prolines.pbs). `read_proline.awk` must be in the same directory as `get_prolines.pbs`. Set the path to the PDB directory in the script before executing:
+3. Read the atomic coordinates of the proline residues with [get_prolines.pbs](Scripts/PDB/get_prolines.pbs). [read_proline.awk](Scripts/PDB/read_proline.awk) must be in the same directory as [get_prolines.pbs](Scripts/PDB/get_prolines.pbs). Set the path to the PDB directory in the script before executing:
 ```shell
 qsub get_prolines.pbs
 ```
-4. Use the `assemble_prolines.rmd` R notebook to pivot `proline_atoms.csv` to a wide format.
+4. Use the [assemble_prolines.rmd](Scripts/PDB/assemble_prolines.rmd) R notebook to pivot `proline_atoms.csv` to a wide format.
 
 #### 2. Add adjacent groups
 
