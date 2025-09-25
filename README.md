@@ -249,16 +249,17 @@ The R notebook, [Inspect_hi-res_scans.rmd](<Scripts/Relaxed Surface Scans/Inspec
 ```shell
 ./TS_search_hi-res.sh TS_search_hi-res.config
 ```
+The shell script ([TS_search.sh](<Scripts/Transition State Searches/TS_search.sh>)) requires the transition state search input file ([TS_search_hi-res.inp](<Scripts/Transition State Searches/TS_search_hi-res.inp>)) and the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) in the working directory or PATH variables.
 
 This transition state search requires three optimised geometries along the reaction path: 
 1) a geometry that precedes the transition state on the reaction path ([rf_10748_hi-res_scan.263.xyz](<Data/Transition States/rf_10748_hi-res_scan.263.xyz>)/[fr_18441_hi-res_scan.268.xyz](<Data/Transition States/fr_18441_hi-res_scan.268.xyz>))
 2) a geometry near the expected transition state ([rf_10748_hi-res_scan.284.xyz](<Data/Transition States/rf_10748_hi-res_scan.284.xyz>)/[fr_18441_hi-res_scan.288.xyz](<Data/Transition States/fr_18441_hi-res_scan.288.xyz>))
 3) a geometry the follows the transition state on the path ([rf_10748_hi-res_scan.305.xyz](<Data/Transition States/rf_10748_hi-res_scan.305.xyz>)/[fr_18441_hi-res_scan.308.xyz](<Data/Transition States/fr_18441_hi-res_scan.308.xyz>))
 
-The shell script ([TS_search.sh](<Scripts/Transition State Searches/TS_search.sh>)) requires the transition state search input file ([TS_search.inp](<Scripts/Transition State Searches/TS_search.inp>)) and the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) in the working directory or PATH variables. The configuration file ([TS_search.config](<Scripts/Transition State Searches/TS_search.config>)) has the following columns:
+The configuration file ([TS_search_hi-res.config](<Scripts/Transition State Searches/TS_search_hi-res.config>)) has the following columns:
 
 ```csvs
-Job Name; Path to Input Geometry
+Job Name; Path to geometry 1; Path to Geometry 2; Path to Geometry 3
 ```
 
 ##### 9. Convert the Cartesian atomic coordinates to internal coordinates
