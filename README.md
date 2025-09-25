@@ -275,6 +275,7 @@ python xyz2internal.py syn-exo.xyz AcProNHMe_internal.config syn-exo.intl
 
 ##### 10. Characterise transition states
 
+Use the R notebook [Analyse_Transition_States.rmd](<Scripts/Transition State Searches/Analyse_Transition_States.Rmd>) to calculate puckering coordinates and tabulate the properties of the transition state geometries. This notebook requires the internal coordinates of all optimised transition states ([anti-endo.intl](<Data/Transition States/anti-endo.intl>)/[syn-endo.intl](<Data/Transition States/syn-endo.intl>)/[anti-exo.xyz](<Data/Transition States/anti-exo.intl>)/[syn-exo.intl](<Data/Transition States/syn-exo.intl>)) and their ORCA property files ([anti-endo.property.json](<Data/Transition States/anti-endo.property.json>)/[syn-endo.property.json](<Data/Transition States/syn-endo.property.json>)/[anti-exo.property.json](<Data/Transition States/anti-exo.property.json>)/[syn-exo.property.json](<Data/Transition States/syn-exo.property.json>)).
 
 
 ### Benchmark of DFT functionals
