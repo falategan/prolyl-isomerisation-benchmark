@@ -242,7 +242,7 @@ python xyz2internal.py rf_10748_hi-res_scan.allxyz AcProNHMe_internal.config rf_
 
 ##### 6. Identify new candidate transition states
 
-The R notebook, [Inspect_hi-res_scans.rmd](<Scripts/Relaxed Surface Scans/Inspect_hi-res_scans.rmd>), produces plots from which new candidate saddle points may be selected. The notebook requires the internal coordinates for the refined surface scans ([fr_18441_hi-res_scan.intl](<Data/Transition States/fr_18441_hi-res_scan.intl)/[rf_10748_hi-res_scan.intl](<Data/Transition States/rf_10748_hi-res_scan.intl)), and the single point energies of each geometry ([fr_18441_hi-res_scan.relaxscanact.dat](<Data/Transition States/fr_18441_hi-res_scan.relaxscanact.dat>)/[rf_10748_hi-res_scan.relaxscanact.dat](<Data/Transition States/rf_10748_hi-res_scan.relaxscanact.dat>)).
+The R notebook, [Inspect_hi-res_scans.rmd](<Scripts/Relaxed Surface Scans/Inspect_hi-res_scans.rmd>), produces plots from which new candidate saddle points may be selected. The notebook requires the internal coordinates for the refined surface scans ([fr_18441_hi-res_scan.intl](<Data/Transition States/fr_18441_hi-res_scan.intl>)/[rf_10748_hi-res_scan.intl](<Data/Transition States/rf_10748_hi-res_scan.intl>)), and the single point energies of each geometry ([fr_18441_hi-res_scan.relaxscanact.dat](<Data/Transition States/fr_18441_hi-res_scan.relaxscanact.dat>)/[rf_10748_hi-res_scan.relaxscanact.dat](<Data/Transition States/rf_10748_hi-res_scan.relaxscanact.dat>)).
 
 ##### 7. Optimise new candidate transition states
 
