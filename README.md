@@ -215,14 +215,34 @@ Use the `Analyse_TS_scans.rmd` R notebook to plot the results and identify saddl
 ```shell
 ./TS_search.sh TS_search.config
 ```
-The shell script ([TS_search.sh](<Scripts/Transition State Searches/TS_search.sh>)) requires the transition state search input file ([TS_search.inp](<Scripts/Transition State Searches/TS_search.inp>)), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the configuration file ([TS_search.config](<Scripts/Transition State Searches/TS_search.config>)) in the working directory or PATH variables. The configuration file has the following columns:
+The shell script ([TS_search.sh](<Scripts/Transition State Searches/TS_search.sh>)) requires the transition state search input file ([TS_search.inp](<Scripts/Transition State Searches/TS_search.inp>)) and the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) in the working directory or PATH variables. The configuration file ([TS_search.config](<Scripts/Transition State Searches/TS_search.config>)) has the following columns:
 
 ```csvs
 Job Name; Path to Input Geometry
 ```
 ##### 5. High-resolution surface scans near unsuccessful candidates
 
+Perform two-dimensional relaxed surface scans around the candidates that failed to produce first-order saddle points ([TS_fr_scan.18441.xyz](<Data/Transition States/TS_fr_scan.18441.xyz>)/[TS_rf_scan.10748.xyz](<Data/Transition States/TS_rf_scan.10748.xyz>)). 
+
+```
+./xtb_2d_scan.sh TS_scans_hi-res.config
+```
+[xtb_2d_scan.sh](<Scripts/Relaxed Surface Scans/xtb_2d_scan.sh>) requires the two-dimensional surface scan input file ([xtb_2d_scan.inp](<Scripts/Transition State Searches/xtb_2d_scan.inp>)) and the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) in the working directory or PATH variables. The configuration file ([TS_scans_hi-res.config](<Scripts/Transition State Searches/TS_scans_hi-res.config>)) has the following columns:
+
+```csvs
+Job Name; Path to Starting Geometry; First Scan Coordinate; Second Scan Coordinate; Solvent
+```
+
+##### 6. Convert the Cartesian atomic coordinates to internal coordinates
+
+```shell
+python xyz2internal.py fr_18441_hi-res_scan.allxyz AcProNHMe_internal.config fr_18441_hi-res_scan.intl
+python xyz2internal.py rf_10748_hi-res_scan.allxyz AcProNHMe_internal.config rf_10748_hi-res_scan.intl
+```
+
 ##### 6. Identify new candidate transition states
+
+The R notebook, [Inspect_hi-res_scans.rmd](<Scripts/Relaxed Surface Scans/Inspect_hi-res_scans.rmd>), produces plots from which new candidate saddle points may be selected. The notebook requires the internal coordinates for the refined surface scans ([fr_18441_hi-res_scan.intl](<Data/Transition States/fr_18441_hi-res_scan.intl)/[rf_10748_hi-res_scan.intl](<Data/Transition States/rf_10748_hi-res_scan.intl)), and the single point energies of each geometry ([fr_18441_hi-res_scan.relaxscanact.dat](<Data/Transition States/fr_18441_hi-res_scan.relaxscanact.dat>)/[rf_10748_hi-res_scan.relaxscanact.dat](<Data/Transition States/rf_10748_hi-res_scan.relaxscanact.dat>)).
 
 ##### 7. Optimise new candidate transition states
 
