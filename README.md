@@ -164,7 +164,7 @@ Use the [minima_scans.rmd](<Scripts/Relaxed Surface Scans/minima_scans.rmd>) R n
 
 ##### 4. Optimise local minima
 
-Optimise the geometry of the approximate local minima (`minima_fwd_scan.940.xyz`/`minima_fwd_scan.1524.xyz`/`minima_fwd_scan.44007.xyz`/`minima_fwd_scan.44678.xyz`) at the r<sup>2</sup>SCAN-3c level op theory by executing `opt-geom.sh`.
+Optimise the geometry of the approximate local minima ([minima_fwd_scan.940.xyz](<Data/Minimum Geometries/minima_fwd_scan.940.xyz>) / [minima_fwd_scan.1524.xyz](<Data/Minimum Geometries/minima_fwd_scan.1524.xyz>) / [minima_fwd_scan.44007.xyz](<Data/Minimum Geometries/minima_fwd_scan.44007.xyz>) / [minima_fwd_scan.44678.xyz](<Data/Minimum Geometries/minima_fwd_scan.44678.xyz>)) at the r<sup>2</sup>SCAN-3c level op theory by executing [opt_geom.sh](<Data/Geometry Optimisation/opt_geom.sh>).
 
 ```shell
 ./opt_geom.sh opt_minima.config
