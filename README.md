@@ -208,7 +208,7 @@ python xyz2internal.py TS_rr_scan.allxyz AcProNHMe_internal.config TS_rr_scan.in
 
 ##### 3. Identify candidate transition states
 
-Use the `Analyse_TS_scans.rmd` R notebook to plot the results and identify saddle points. The notebook requires the internal coordinates for all the surface scans (`TS_ff_scan.intl`/`TS_fr_scan.intl`/`TS_rf_scan.intl`/`TS_rr_scan.intl`), and the single point energies of each geometry (`TS_ff_scan.relaxscanact.dat`/`TS_fr_scan.relaxscanact.dat`/`TS_rf_scan.relaxscanact.dat`/`TS_rr_scan.relaxscanact.dat`).
+Use the [Analyse_TS_scans.rmd](<Scripts/Relaxed Surface Scans/Analyse_TS_scans.rmd>) R notebook to plot the results and identify saddle points. The notebook requires the internal coordinates for all the surface scans ([TS_ff_scan.intl](<Data/Transition States/TS_ff_scan.intl>) / [TS_fr_scan.intl](<Data/Transition States/TS_fr_scan.intl>) / [TS_rf_scan.intl](<Data/Transition States/TS_rf_scan.intl>) / [TS_rr_scan.intl](<Data/Transition States/TS_rr_scan.intl>)), and the single point energies of each geometry ([TS_ff_scan.relaxscanact.dat](<Data/Transition States/TS_ff_scan.relaxscanact.dat>) / [TS_fr_scan.relaxscanact.dat](<Data/Transition States/TS_fr_scan.relaxscanact.dat>) / [TS_rf_scan.relaxscanact.dat](<Data/Transition States/S_rf_scan.relaxscanact.dat>) / [TS_rr_scan.relaxscanact.dat](<Data/Transition States/TS_rr_scan.relaxscanact.dat>)).
 
 ##### 4. Optimise candidate transition states
 
