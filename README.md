@@ -240,15 +240,30 @@ python xyz2internal.py fr_18441_hi-res_scan.allxyz AcProNHMe_internal.config fr_
 python xyz2internal.py rf_10748_hi-res_scan.allxyz AcProNHMe_internal.config rf_10748_hi-res_scan.intl
 ```
 
-##### 6. Identify new candidate transition states
+##### 7. Identify new candidate transition states
 
 The R notebook, [Inspect_hi-res_scans.rmd](<Scripts/Relaxed Surface Scans/Inspect_hi-res_scans.rmd>), produces plots from which new candidate saddle points may be selected. The notebook requires the internal coordinates for the refined surface scans ([fr_18441_hi-res_scan.intl](<Data/Transition States/fr_18441_hi-res_scan.intl>)/[rf_10748_hi-res_scan.intl](<Data/Transition States/rf_10748_hi-res_scan.intl>)), and the single point energies of each geometry ([fr_18441_hi-res_scan.relaxscanact.dat](<Data/Transition States/fr_18441_hi-res_scan.relaxscanact.dat>)/[rf_10748_hi-res_scan.relaxscanact.dat](<Data/Transition States/rf_10748_hi-res_scan.relaxscanact.dat>)).
 
-##### 7. Optimise new candidate transition states
+##### 8. Optimise new candidate transition states
 
-##### 8. Convert the Cartesian atomic coordinates to internal coordinates
+```shell
+./TS_search_hi-res.sh TS_search_hi-res.config
+```
 
-##### 9. Characterise transition states
+This transition state search requires three optimised geometries along the reaction path: 
+1) a geometry that precedes the transition state on the reaction path ([rf_10748_hi-res_scan.263.xyz](<Data/Transition States/rf_10748_hi-res_scan.263.xyz>)/[fr_18441_hi-res_scan.268.xyz](<Data/Transition States/fr_18441_hi-res_scan.268.xyz>))
+2) a geometry near the expected transition state ([rf_10748_hi-res_scan.284.xyz](<Data/Transition States/rf_10748_hi-res_scan.284.xyz>)/[fr_18441_hi-res_scan.288.xyz](<Data/Transition States/fr_18441_hi-res_scan.288.xyz>))
+3) a geometry the follows the transition state on the path ([rf_10748_hi-res_scan.305.xyz](<Data/Transition States/rf_10748_hi-res_scan.305.xyz>)/[fr_18441_hi-res_scan.308.xyz](<Data/Transition States/fr_18441_hi-res_scan.308.xyz>))
+
+The shell script ([TS_search.sh](<Scripts/Transition State Searches/TS_search.sh>)) requires the transition state search input file ([TS_search.inp](<Scripts/Transition State Searches/TS_search.inp>)) and the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) in the working directory or PATH variables. The configuration file ([TS_search.config](<Scripts/Transition State Searches/TS_search.config>)) has the following columns:
+
+```csvs
+Job Name; Path to Input Geometry
+```
+
+##### 9. Convert the Cartesian atomic coordinates to internal coordinates
+
+##### 10. Characterise transition states
 
 ### Benchmark of DFT functionals
 
