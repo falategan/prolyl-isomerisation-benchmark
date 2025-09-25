@@ -58,9 +58,9 @@ qsub get_methyl.pbs
 
 #### 3. Convert Cartesian atomic coordinates to internal coordinates
 
-Execute `csv2internal.py` to generate internal coordinates for each residue. `csv2internal.py` imports modules from `xyz2internal.py`. Ensure this script is included in the environment or working directory. `csv2internal.py` takes three arguments: 
+Execute [csv2internal.py](<Scripts/Internal Coordinates/csv2internal.py>) to generate internal coordinates for each residue. [csv2internal.py](<Scripts/Internal Coordinates/csv2internal.py>) imports modules from [xyz2internal.py](<Scripts/Internal Coordinates/xyz2internal.py>). Ensure this script is included in the environment or working directory. [csv2internal.py](<Scripts/Internal Coordinates/csv2internal.py>)  takes three arguments: 
 1) the path to the Cartesian coordinates (`AcProNMe.csv`)
-2) the path to the configuration file defining the internal coordinates (`AcProNMe_internal.config`)
+2) the path to the configuration file defining the internal coordinates ([csv2internal.py](<Scripts/Internal Coordinates/AcProNMe_internal.config>))
 3) the path for the output (`PDB.intl`)
 
 ```shell
@@ -69,7 +69,7 @@ python csv2internal.py ./AcProNMe.csv ./AcProNMe_internal.config ./PDB.intl
 
 #### 4. Filter and generate figures of the conformational distribution
 
-Use `analyse_pdb.rmd` to analyse the distribution of conformations within the PDB sample (`PDB.intl`).
+Use [analyse_pdb.rmd](Scripts/PDB/analyse_pdb.rmd) to analyse the distribution of conformations within the PDB sample (`PDB.intl`).
 
 ### ORCA Computational Chemistry Overview
 
@@ -85,7 +85,7 @@ This scheme simplifies the execution of a large number of ORCA jobs in parallel 
 
 ![Flowchart depicting the data pipeline for the preparation of the starting geometry](./Images/Preparation_flowchart.png)
 
-Optimise the geometry of the AcProNHMe crystallographic structure `AcProNHMe_Crystal.xyz` at the r<sup>2</sup>SCAN-3c level of theory by executing `opt_geom.sh`. The script requires a configuration file (`geom_prep.config)` listing the job name and the path to the atomic coordinates separated by a semicolon. Ensure the ORCA geometry optimisation input file (`opt_geom.inp`) and the template jobscript (`orca_template.pbs`) are included in the working directory or PATH variables.
+Optimise the geometry of the AcProNHMe crystallographic structure [AcProNHMe_Crystal.xyz](<Data/Structure Preparation/AcProNHMe_Crystal.xyz>) at the r<sup>2</sup>SCAN-3c level of theory by executing [opt_geom.sh](<Data/Geometry Optimisation/opt_geom.sh>). The script requires a configuration file ([geom_prep.config](<Data/Structure Preparation/geom_prep.config>)) listing the job name and the path to the atomic coordinates separated by a semicolon. Ensure the ORCA geometry optimisation input file ([opt_geom.inp](<Data/Geometry Optimisation/opt_geom.inp>)) and the template jobscript ([orca_template.pbs](Scripts/orca_template.pbs)) are included in the working directory or PATH variables.
 
 ```shell
 ./opt_geom.sh  geom_prep.config
@@ -99,13 +99,13 @@ This section makes use of the initial optimised geometry generate in the [Prepar
 
 #### 1. Execute relaxed surface scans 
 
-Run the `xtb_2D_scan.sh` script, starting at the optimised starting geometry (`AcProNHMe_opt.xyz`).
+Run the [xtb_2D_scan.sh](<Scripts/Relaxed Surface Scans/xtb_2D_scan.sh>) script, starting at the optimised starting geometry ([AcProNHMe_opt.xyz](<Data/Structure Preparation/AcProNHMe_opt.xyz>).
 
 ```shell
 ./xtb_2D_scan.sh solvent_scans.config
 ```
 
-The semicolon-delimited configuration file (`solvent_scans.config`) has the following columns:
+The semicolon-delimited configuration file ([solvent_scans.config](<Scripts/Relaxed Surface Scans/solvent_scans.config>)) has the following columns:
 ```csvs
 Job Name; Path to Starting Geometry; First Scan Coordinate; Second Scan Coordinate; Solvent
 ```
@@ -114,9 +114,9 @@ The scan coordinates specify the scanning dimension, starting coordinate, end co
 
 #### 2. Convert the Cartesian atomic coordinates to internal coordinates
 
-Use `xyz2internal.py` to generate internal coordinates for each scan. The script takes three arguments: 
-1) the path to the atomic coordinates (`xtb_H2O_scan.allxyz`/`xtb_CHCl3_scan.allxyz`/`xtb_DMF_scan.allxyz`/`xtb_gas_scan.allxyz`),
-2) the path to the internal coordinate configuration file (`AcProNHMe_internal.config`)
+Use [xyz2internal.py](<Scripts/Internal Coordinates/xyz2internal.py>) to generate internal coordinates for each scan. The script takes three arguments: 
+1) the path to the atomic coordinates (`xtb_H2O_scan.allxyz` / `xtb_CHCl3_scan.allxyz` / `xtb_DMF_scan.allxyz` / `xtb_gas_scan.allxyz`),
+2) the path to the internal coordinate configuration file ([AcProNHMe_internal.config](<Scripts/Internal Coordinates/AcProNHMe_internal.config>)
 3) the output path (`xtb_H2O_scan.intl`/`xtb_CHCl3_scan.intl`/`xtb_DMF_scan.intl`/`xtb_gas_scan.intl`).
 
 ```shell
