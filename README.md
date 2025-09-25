@@ -286,7 +286,7 @@ This section uses the minimum energy geometries derived in the [Identification o
 
 #### Calculate CCSD(T)/CBS single point energies
 
-```
+```shell
 ./CCSD.sh geometries.config
 ```
 
@@ -296,8 +296,22 @@ The shell script ([CCSD.sh](<Scripts/Single Point Energies/CCSD.sh>)) requires t
 
 #### Calculate DFT single point energies
 
+```shell
+./DFT_energies.sh
+```
+
+The shell script ([DFT_energies.sh](<Scripts/Single Point Energies/DFT_energies.sh>)) requires the DFT single point energy input file ([DFT_energies.inp](<Scripts/Single Point Energies/DFT_energies.inp>)), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the critical point geometries ([transG_g-endo.xyz](<Data/Minimum Geometries/transG_g-endo.xyz>) / [transG_g-exo.xyz](<Data/Minimum Geometries/transG_g-exo.xyz>) / [cisD_g-exo.xyz](<Data/Minimum Geometries/cisD_g-exo.xyz>) / [cisA_g-endo.xyz](<Data/Minimum Geometries/cisA_g-endo.xyz>) / [anti-endo.xyz](<Data/Transition States/anti-endo.xyz>) / [syn-endo.xyz](<Data/Transition States/syn-endo.xyz>) / [anti-exo.xyz](<Data/Transition States/anti-exo.xyz>) / [syn-exo.xyz](<Data/Transition States/syn-exo.xyz>)), the geometry configuration file ([geometries.config](<Scripts/Single Point Energies/geometries.config>)) and the level-of-theory configuration file ([DFT_LoT.config](<Scripts/Single Point Energies/DFT_LoT.config>)) in the working directory or PATH variables. 
+
+The geometry configuration file ([geometries.config](<Scripts/Single Point Energies/geometries.config>)) has a single column providing the names of the critical point geometries (`transG_g-endo` / `transG_g-exo` / `cisD_g-exo` / `cisA_g-endo` / `anti-endo` / `anti-exo` / `syn-endo` / `syn-exo`)
+
+The level-of-theory configuration file ([geometries.config](<Scripts/Single Point Energies/DFT_LoT.config.config>)) has the following columns:
+```csvs
+METHOD; BASIS SET
+```
 
 #### Analyse the accuracy of each DFT functional
+
+Use the R notebook [Analyse_Benchmark.rmd](<Scripts/Single Point Energies/Analyse_Benchmark.Rmd>) to analyse the CCSD(T) CBS extrapolation, benchmark each DFT functional against the CCSD(T) reference and compare the effect of dispersion corrections. The notebook requires the property files from the CCSD(T)/CBS and DFT single point energy calculations.
 
 ## License
 [GNU General Public License v3.0
