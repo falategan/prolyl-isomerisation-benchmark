@@ -125,7 +125,7 @@ python xyz2internal.py xtb_{solvent}_scan.allxyz AcProNHMe_internal.config xtb_{
 
 #### 3. Analyse the surface scans 
 
-Use the `Analyse_solvent_scans.rmd` R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans (`xtb_{solvent}_scan.intl`), and the single point energies of each geometry (`xtb_{solvent}_scan.relaxscanact.dat`)
+Use the [Analyse_solvent_scans.rmd](<Scripts/Relaxed Surface Scans/Analyse_solvent_scans.rmd>) R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans (`xtb_{solvent}_scan.intl`), and the single point energies of each geometry (`xtb_{solvent}_scan.relaxscanact.dat`)
 
 
 
@@ -139,14 +139,14 @@ This section makes use of the initial optimised geometry generate in the [Prepar
 
 ##### 1. _Trans_ relaxed surface scans
 
-Execute `xtb_3d_scans.sh` to scan the _trans_ conformational landscape starting with the initial optimised geometry (`AcProNHMe_opt.xyz`).
+Execute [xtb_3d_scans.sh](<Scripts/Relaxed Surface Scans/xtb_3d_scans.sh>) to scan the _trans_ conformational landscape starting with the initial optimised geometry ([AcProNHMe_opt.xyz](<Data/Structure Preparation/AcProNHMe_opt.xyz>)).
 
 
 ```shell
 ./xtb_3d_scans.sh minima_scans.config
 ```
 
-The configuration file (`minima_scans.config`) has the following columns:
+The configuration file ([minima_scans.config](<Scripts/Relaxed Surface Scans/minima_scans.config>) has the following columns:
 ```csvs
 Job Name; Path to Starting Geometry; First Scanning Coordinate; Second Scanning Coordinate; Third Scanning Coordinate
 ```
@@ -160,7 +160,7 @@ python xyz2internal.py minima_rev_scan.allxyz AcProNHMe_internal.config minima_r
 
 ##### 3. Identify local minima
 
-Use the `minima_scans.rmd` R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans (`minima_fwd_scan.intl`/`minima_rev_scan.intl`), and the single point energies of each geometry (`minima_fwd_scan.relaxscanact.dat`/`minima_rev_scan.relaxscanact.dat`)
+Use the [minima_scans.rmd](<Scripts/Relaxed Surface Scans/minima_scans.rmd>) R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans ([minima_fwd_scan.intl](<Data/Minimum Geometries/minima_fwd_scan.intl>) / [minima_rev_scan.intl](<Data/Minimum Geometries/minima_rev_scan.intl>)), and the single point energies of each geometry ([minima_fwd_scan.relaxscanact.dat](<Data/Minimum Geometries/minima_fwd_scan.relaxscanact.dat>) / [minima_rev_scan.relaxscanact.dat](<Data/Minimum Geometries/minima_rev_scan.relaxscanact.dat>))
 
 ##### 4. Optimise local minima
 
