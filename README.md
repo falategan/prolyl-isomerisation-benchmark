@@ -264,7 +264,18 @@ Job Name; Path to geometry 1; Path to Geometry 2; Path to Geometry 3
 
 ##### 9. Convert the Cartesian atomic coordinates to internal coordinates
 
+Generate internal coordinates for the first-order saddle points ([anti-endo.xyz](<Data/Transition States/anti-endo.xyz>)/[syn-endo.xyz](<Data/Transition States/syn-endo.xyz>)/[anti-exo.xyz](<Data/Transition States/anti-exo.xyz>)/[syn-exo.xyz](<Data/Transition States/syn-exo.xyz>)) identified by both the primary and refined transition state searches.
+
+```shell
+python xyz2internal.py anti-endo.xyz AcProNHMe_internal.config anti-endo.intl
+python xyz2internal.py syn-endo.xyz AcProNHMe_internal.config syn-endo.intl
+python xyz2internal.py anti-exo.xyz AcProNHMe_internal.config anti-exo.intl
+python xyz2internal.py syn-exo.xyz AcProNHMe_internal.config syn-exo.intl
+```
+
 ##### 10. Characterise transition states
+
+
 
 ### Benchmark of DFT functionals
 
