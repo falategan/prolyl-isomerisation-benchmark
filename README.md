@@ -82,6 +82,7 @@ To reproduce this analysis, you will need:
 <details>
 <summary>Usage</summary>
 
+
 1. Select your set of proteins and download their `.pdb` crystallographic coordinates to a dedicated directory. 
 2. Write their PDB ids of the proteins into a newline ("\\n") separated text file ([pisces_pdb_ids.txt](<./Data/PDB Conformations/pisces_pdb_ids.txt>)). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
 3. Read the atomic coordinates of the proline residues with [get_prolines.pbs](Scripts/PDB/get_prolines.pbs). [read_proline.awk](Scripts/PDB/read_proline.awk) must be in the same directory as [get_prolines.pbs](Scripts/PDB/get_prolines.pbs). Set the path to the PDB directory in the script before executing:
@@ -97,6 +98,7 @@ qsub get_prolines.pbs
 <details>
 <summary>Usage</summary>
 
+
 1. Read the atoms from adjacent residues by executing [get_acetyl.pbs](Scripts/PDB/get_acetyl.pbs), [get_amide.pbs](Scripts/PDB/get_amide.pbs) and [get_methyl.pbs](Scripts/PDB/get_methyl.pbs). [read_acetyl.awk](Scripts/PDB/read_acetyl.awk), [read_amide.awk](Scripts/PDB/read_amide.awk),and [read_methyl.awk](Scripts/PDB/read_methyl.awk) must be in the same directory as their respective pbs scripts. Each directory must also contain the wide-format proline coordinates (`proline_residues.csv`) . Set the path to the PDB directory in each script before executing:
 ```shell
 qsub get_acetyl.pbs
@@ -109,6 +111,9 @@ qsub get_methyl.pbs
 
 #### 3. Convert Cartesian atomic coordinates to internal coordinates
 
+<details>
+<summary>Usage</summary>
+
 Execute [csv2internal.py](<Scripts/Internal Coordinates/csv2internal.py>) to generate internal coordinates for each residue. [csv2internal.py](<Scripts/Internal Coordinates/csv2internal.py>) imports modules from [xyz2internal.py](<Scripts/Internal Coordinates/xyz2internal.py>). Ensure this script is included in the environment or working directory. [csv2internal.py](<Scripts/Internal Coordinates/csv2internal.py>)  takes three arguments: 
 1) the path to the Cartesian coordinates (`AcProNMe.csv`)
 2) the path to the configuration file defining the internal coordinates ([csv2internal.py](<Scripts/Internal Coordinates/AcProNMe_internal.config>))
@@ -117,12 +122,16 @@ Execute [csv2internal.py](<Scripts/Internal Coordinates/csv2internal.py>) to gen
 ```shell
 python csv2internal.py ./AcProNMe.csv ./AcProNMe_internal.config ./PDB.intl
 ```
+</details>
 
 #### 4. Filter and generate figures of the conformational distribution
 
+<details>
+<summary>Usage</summary>
+
 Use [analyse_pdb.rmd](Scripts/PDB/analyse_pdb.rmd) to analyse the distribution of conformations within the PDB sample (`PDB.intl`).
 
-
+</details>
 
 ### ORCA Computational Chemistry Overview
 
@@ -152,6 +161,9 @@ This section makes use of the initial optimised geometry generate in the [Prepar
 
 #### 1. Execute relaxed surface scans 
 
+<details>
+<summary>Usage</summary>
+
 Run the [xtb_2D_scan.sh](<Scripts/Relaxed Surface Scans/xtb_2D_scan.sh>) script, starting at the optimised starting geometry ([AcProNHMe_opt.xyz](<Data/Structure Preparation/AcProNHMe_opt.xyz>).
 
 ```shell
@@ -165,7 +177,12 @@ Job Name; Path to Starting Geometry; First Scan Coordinate; Second Scan Coordina
 
 The scan coordinates specify the scanning dimension, starting coordinate, end coordinate and number of steps for each scanning dimension in the ORCA `%geom SCAN` format.
 
+</details>
+
 #### 2. Convert the Cartesian atomic coordinates to internal coordinates
+
+<details>
+<summary>Usage</summary>
 
 Use [xyz2internal.py](<Scripts/Internal Coordinates/xyz2internal.py>) to generate internal coordinates for each scan. The script takes three arguments: 
 1) the path to the atomic coordinates (`xtb_H2O_scan.allxyz` / `xtb_CHCl3_scan.allxyz` / `xtb_DMF_scan.allxyz` / `xtb_gas_scan.allxyz`),
@@ -176,11 +193,16 @@ Use [xyz2internal.py](<Scripts/Internal Coordinates/xyz2internal.py>) to generat
 python xyz2internal.py xtb_{solvent}_scan.allxyz AcProNHMe_internal.config xtb_{solvent}_scan.intl
 ```
 
+</details>
+
 #### 3. Analyse the surface scans 
+
+<details>
+<summary>Usage</summary>
 
 Use the [Analyse_solvent_scans.rmd](<Scripts/Relaxed Surface Scans/Analyse_solvent_scans.rmd>) R notebook to plot the results and identify local minima. The notebook requires the internal coordinates for all the surface scans (`xtb_{solvent}_scan.intl`), and the single point energies of each geometry (`xtb_{solvent}_scan.relaxscanact.dat`)
 
-
+</details>
 
 ### Explore gas-phase reaction paths
 
@@ -189,6 +211,10 @@ This section makes use of the initial optimised geometry generate in the [Prepar
 ####  Identification of minimum energy geometries
 
 ![Flowchart depicting the data pipeline for the identification of minimum energy geometries](./Images/Geometry_Optimisation_flowchart.png)
+
+
+<details>
+<summary>Usage</summary>
 
 ##### 1. _Trans_ relaxed surface scans
 
@@ -238,9 +264,15 @@ python xyz2internal.py cisA_g-endo.xyz AcProNHMe_internal.config cisA_g-endo.int
 
 Use the [Analyse_minima.rmd](<Scripts/Geometry Optimisation/Analyse_minima.rmd>) R notebook to calculate puckering coordinates and tabulate the properties of the local minimum geometries. This notebook requires the internal coordinates of all optimised minima ([transG_g-endo.intl](<Data/Minimum Geometries/transG_g-endo.intl>) / [transG_g-exo.intl](<Data/Minimum Geometries/transG_g-endo.intl>) / [cisD_g-exo.intl](<Data/Minimum Geometries/transG_g-endo.intl>) / [cisA_g-endo.intl](<Data/Minimum Geometries/transG_g-endo.intl>) ) and their ORCA property files ([minima_fwd_scan.940.property.json](<Data/Minimum Geometriesminima_fwd_scan.940.property.json>) / [minima_fwd_scan.1534.property.json](<Data/Minimum Geometries/minima_fwd_scan.1534.property.json>) / [minima_fwd_scan.44007.property.json](<Data/Minimum Geometries/minima_fwd_scan.44007.property.json>) / [minima_fwd_scan.44678.property.json](<Data/Minimum Geometries/minima_fwd_scan.44678.property.json>)).
 
+</details>
+
 #### Identification of gas-phase transition state geometries
 
 ![Flowchart depicting the data pipeline for the identification of transition state geometries](./Images/TS_search_flowchart.png)
+
+
+<details>
+<summary>Usage</summary>
 
 ##### 1. Isomerisation path relaxed surface scans
 
@@ -330,12 +362,16 @@ python xyz2internal.py syn-exo.xyz AcProNHMe_internal.config syn-exo.intl
 
 Use the R notebook [Analyse_Transition_States.rmd](<Scripts/Transition State Searches/Analyse_Transition_States.Rmd>) to calculate puckering coordinates and tabulate the properties of the transition state geometries. This notebook requires the internal coordinates of all optimised transition states ([anti-endo.intl](<Data/Transition States/anti-endo.intl>) / [syn-endo.intl](<Data/Transition States/syn-endo.intl>) / [anti-exo.xyz](<Data/Transition States/anti-exo.intl>) / [syn-exo.intl](<Data/Transition States/syn-exo.intl>)) and their ORCA property files ([anti-endo.property.json](<Data/Transition States/anti-endo.property.json>) / [syn-endo.property.json](<Data/Transition States/syn-endo.property.json>) / [anti-exo.property.json](<Data/Transition States/anti-exo.property.json>) / [syn-exo.property.json](<Data/Transition States/syn-exo.property.json>)).
 
+</details>
 
 ### Benchmark of DFT functionals
 
 ![Flowchart depicting the data pipeline for the benchmark of DFT functionals](./Images/Benchmark_Flowchart.png)
 
 This section uses the minimum energy geometries derived in the [Identification of minimum energy geometries section](#identification-of-minimum-energy-geometries) and the transition state geometries derived in the [Identification of minimum energy geometries section](#identification-of-minimum-energy-geometries) and the transition states derived in the [Identification of gas-phase transition state geometries section](#identification-of-gas-phase-transition-state-geometries).
+
+<details>
+<summary>Usage</summary>
 
 #### Calculate CCSD(T)/CBS single point energies
 
@@ -347,7 +383,12 @@ The configuration file ([geometries.config](<Scripts/Single Point Energies/geome
 
 The shell script ([CCSD.sh](<Scripts/Single Point Energies/CCSD.sh>)) requires the CCSD(T)/CSB input file ([CCSD.inp](<Scripts/Single Point Energies/CCSD.inp>)), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the critical point geometries ([transG_g-endo.xyz](<Data/Minimum Geometries/transG_g-endo.xyz>) / [transG_g-exo.xyz](<Data/Minimum Geometries/transG_g-exo.xyz>) / [cisD_g-exo.xyz](<Data/Minimum Geometries/cisD_g-exo.xyz>) / [cisA_g-endo.xyz](<Data/Minimum Geometries/cisA_g-endo.xyz>) / [anti-endo.xyz](<Data/Transition States/anti-endo.xyz>) / [syn-endo.xyz](<Data/Transition States/syn-endo.xyz>) / [anti-exo.xyz](<Data/Transition States/anti-exo.xyz>) / [syn-exo.xyz](<Data/Transition States/syn-exo.xyz>)) in the working directory or PATH variables. 
 
+</details>
+
 #### Calculate DFT single point energies
+
+<details>
+<summary>Usage</summary>
 
 ```shell
 ./DFT_energies.sh
@@ -361,10 +402,16 @@ The level-of-theory configuration file ([geometries.config](<Scripts/Single Poin
 ```csvs
 METHOD; BASIS SET
 ```
+</details>
 
 #### Analyse the accuracy of each DFT functional
 
+<details>
+<summary>Usage</summary>
+
 Use the R notebook [Analyse_Benchmark.rmd](<Scripts/Single Point Energies/Analyse_Benchmark.Rmd>) to analyse the CCSD(T) CBS extrapolation, benchmark each DFT functional against the CCSD(T) reference and compare the effect of dispersion corrections. The notebook requires the property files from the CCSD(T)/CBS and DFT single point energy calculations.
+
+</details>
 
 ## License
 [GNU General Public License v3.0
