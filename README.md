@@ -164,7 +164,7 @@ Use the [minima_scans.rmd](<Scripts/Relaxed Surface Scans/minima_scans.rmd>) R n
 
 ##### 4. Optimise local minima
 
-Optimise the geometry of the approximate local minima ([minima_fwd_scan.940.xyz](<Data/Minimum Geometries/minima_fwd_scan.940.xyz>) / [minima_fwd_scan.1524.xyz](<Data/Minimum Geometries/minima_fwd_scan.1524.xyz>) / [minima_fwd_scan.44007.xyz](<Data/Minimum Geometries/minima_fwd_scan.44007.xyz>) / [minima_fwd_scan.44678.xyz](<Data/Minimum Geometries/minima_fwd_scan.44678.xyz>)) at the r<sup>2</sup>SCAN-3c level op theory by executing [opt_geom.sh](<Data/Geometry Optimisation/opt_geom.sh>).
+Optimise the geometry of the approximate local minima ([minima_fwd_scan.940.xyz](<Data/Minimum Geometries/minima_fwd_scan.940.xyz>) / [minima_fwd_scan.1524.xyz](<Data/Minimum Geometries/minima_fwd_scan.1524.xyz>) / [minima_fwd_scan.44007.xyz](<Data/Minimum Geometries/minima_fwd_scan.44007.xyz>) / [minima_fwd_scan.44678.xyz](<Data/Minimum Geometries/minima_fwd_scan.44678.xyz>)) at the r<sup>2</sup>SCAN-3c level op theory by executing [opt_geom.sh](<Scripts/Geometry Optimisation/opt_geom.sh>).
 
 ```shell
 ./opt_geom.sh opt_minima.config
@@ -183,7 +183,7 @@ python xyz2internal.py cisA_g-endo.xyz AcProNHMe_internal.config cisA_g-endo.int
 
 ##### 6. Characterise local minima
 
-Use the `Analyse_minima.rmd` R notebook to calculate puckering coordinates and tabulate the properties of the local minimum geometries. This notebook requires the internal coordinates of all optimised minima (`transG_g-endo.intl`/`transG_g-exo.intl`/`cisD_g-exo.intl`/`cisA_g-endo.intl`) and their ORCA property files (`minima_fwd_scan.940.property.json`/`minima_fwd_scan.1534.property.json`/`minima_fwd_scan.44007.property.json`/`minima_fwd_scan.44678.property.json`).
+Use the [Analyse_minima.rmd](<Scripts/Geometry Optimisation/Analyse_minima.rmd>) R notebook to calculate puckering coordinates and tabulate the properties of the local minimum geometries. This notebook requires the internal coordinates of all optimised minima ([transG_g-endo.intl](<Data/Minimum Geometries/transG_g-endo.intl>) / [transG_g-exo.intl](<Data/Minimum Geometries/transG_g-endo.intl>) / [cisD_g-exo.intl](<Data/Minimum Geometries/transG_g-endo.intl>) / [cisA_g-endo.intl](<Data/Minimum Geometries/transG_g-endo.intl>) ) and their ORCA property files ([minima_fwd_scan.940.property.json](<Data/Minimum Geometriesminima_fwd_scan.940.property.json>) / [minima_fwd_scan.1534.property.json](<Data/Minimum Geometries/minima_fwd_scan.1534.property.json>) / [minima_fwd_scan.44007.property.json](<Data/Minimum Geometries/minima_fwd_scan.44007.property.json>) / [minima_fwd_scan.44678.property.json](<Data/Minimum Geometries/minima_fwd_scan.44678.property.json>)).
 
 #### Identification of gas-phase transition state geometries
 
