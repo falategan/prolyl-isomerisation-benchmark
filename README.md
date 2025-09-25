@@ -2,6 +2,47 @@
 
 This repository contains the data and scripts required to reproduce the results from my MSc thesis _On the Computational Modelling of Prolyl–Peptide_ cis–trans _Isomerisation: Benchmarking DFT Approaches with N–Acetylproline Methylamide_
 
+## Table of Contents
+
+- [Repository Structure](#repository-structure)
+- [Requirements](#requirements)
+- [Usage](#usage)
+  - [Analysis of the conformational distribution of prolyl residues in the PDB](#analysis-of-the-conformational-distribution-of-prolyl-residues-in-the-pdb)
+    - [1. Prepare proline geometries](#1-prepare-proline-geometries)
+    - [2. Add adjacent groups](#2-add-adjacent-groups)
+    - [3. Convert Cartesian atomic coordinates to internal coordinates](#3-convert-cartesian-atomic-coordinates-to-internal-coordinates)
+    - [4. Filter and generate figures of the conformational distribution](#4-filter-and-generate-figures-of-the-conformational-distribution)
+  - [ORCA Computational Chemistry Overview](#orca-computational-chemistry-overview)
+  - [Preparation of the starting geometry](#preparation-of-the-starting-geometry)
+  - [Solvated relaxed surface scans](#solvated-relaxed-surface-scans)
+    - [1. Execute relaxed surface scans](#1-execute-relaxed-surface-scans)
+    - [2. Convert the Cartesian atomic coordinates to internal coordinates](#2-convert-the-cartesian-atomic-coordinates-to-internal-coordinates)
+    - [3. Analyse the surface scans](#3-analyse-the-surface-scans)
+  - [Explore gas-phase reaction paths](#explore-gas-phase-reaction-paths)
+    - [Identification of minimum energy geometries](#identification-of-minimum-energy-geometries)
+      - [1. Trans relaxed surface scans](#1-trans-relaxed-surface-scans)
+      - [2. Convert the Cartesian atomic coordinates to internal coordinates](#2-convert-the-cartesian-atomic-coordinates-to-internal-coordinates-1)
+      - [3. Identify local minima](#3-identify-local-minima)
+      - [4. Optimise local minima](#4-optimise-local-minima)
+      - [5. Convert the Cartesian atomic coordinates to internal coordinates](#5-convert-the-cartesian-atomic-coordinates-to-internal-coordinates)
+      - [6. Characterise local minima](#6-characterise-local-minima)
+    - [Identification of gas-phase transition state geometries](#identification-of-gas-phase-transition-state-geometries)
+      - [1. Isomerisation path relaxed surface scans](#1-isomerisation-path-relaxed-surface-scans)
+      - [2. Convert the Cartesian atomic coordinates to internal coordinates](#2-convert-the-cartesian-atomic-coordinates-to-internal-coordinates-2)
+      - [3. Identify candidate transition states](#3-identify-candidate-transition-states)
+      - [4. Optimise candidate transition states](#4-optimise-candidate-transition-states)
+      - [5. High-resolution surface scans near unsuccessful candidates](#5-high-resolution-surface-scans-near-unsuccessful-candidates)
+      - [6. Convert the Cartesian atomic coordinates to internal coordinates](#6-convert-the-cartesian-atomic-coordinates-to-internal-coordinates)
+      - [7. Identify new candidate transition states](#7-identify-new-candidate-transition-states)
+      - [8. Optimise new candidate transition states](#8-optimise-new-candidate-transition-states)
+      - [9. Convert the Cartesian atomic coordinates to internal coordinates](#9-convert-the-cartesian-atomic-coordinates-to-internal-coordinates)
+      - [10. Characterise transition states](#10-characterise-transition-states)
+  - [Benchmark of DFT functionals](#benchmark-of-dft-functionals)
+    - [Calculate CCSD(T)/CBS single point energies](#calculate-ccsdtcbs-single-point-energies)
+    - [Calculate DFT single point energies](#calculate-dft-single-point-energies)
+    - [Analyse the accuracy of each DFT functional](#analyse-the-accuracy-of-each-dft-functional)
+- [License](#license)
+
 ## Repository Structure
 
 ```
