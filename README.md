@@ -191,7 +191,7 @@ Use the [Analyse_minima.rmd](<Scripts/Geometry Optimisation/Analyse_minima.rmd>)
 
 ##### 1. Isomerisation path relaxed surface scans
 
-Execute `xtb_3d_scans.sh` to scan the conformational landscape between the _cis_ and _trans_ isomeric states, starting with the initial optimised geometry (`AcProNHMe_opt.xyz`). 
+Execute [xtb_3d_scans.sh](<Scripts/Relaxed Surface Scans/xtb_3d_scans.sh>) to scan the conformational landscape between the _cis_ and _trans_ isomeric states, starting with the initial optimised geometry ([AcProNHMe_opt.xyz](<Data/Structure Preparation/AcProNHMe_opt.xyz>)).
 
 ```shell
 ./xtb_3d_scans.sh TS_scans.config
