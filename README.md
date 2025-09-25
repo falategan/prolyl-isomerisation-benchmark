@@ -280,7 +280,9 @@ Use the R notebook [Analyse_Transition_States.rmd](<Scripts/Transition State Sea
 
 ### Benchmark of DFT functionals
 
-![Flowchart depicting the data pipeline for the benchmark of DFT functionals](./Images/Benchmark_Flowchart.png)\
+![Flowchart depicting the data pipeline for the benchmark of DFT functionals](./Images/Benchmark_Flowchart.png)
+
+This section uses the minimum energy geometries derived in the [Identification of minimum energy geometries section](#identification-of-minimum-energy-geometries) and the transition state geometries derived in the [Identification of minimum energy geometries Section](#identification-of-minimum-energy-geometries) and the transition states derived in the [Identification of gas-phase transition state geometries section](#identification-of-gas-phase-transition-state-geometries).
 
 #### Calculate CCSD(T)/CBS single point energies
 
