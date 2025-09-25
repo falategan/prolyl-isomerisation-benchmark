@@ -77,8 +77,10 @@ To reproduce this analysis, you will need:
 
 ![Flowchart depicting the data pipeline for the analysis of the prolyl conformational distribution](./Images/PDB_flowchart.png)
 
+#### 1. Prepare proline geometries
+
 <details>
-<summary>#### 1. Prepare proline geometries</summary>
+<summary>Usage</summary>
 
 1. Select your set of proteins and download their `.pdb` crystallographic coordinates to a dedicated directory. 
 2. Write their PDB ids of the proteins into a newline ("\\n") separated text file ([pisces_pdb_ids.txt](<./Data/PDB Conformations/pisces_pdb_ids.txt>)). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
@@ -88,7 +90,12 @@ qsub get_prolines.pbs
 ```
 4. Use the [assemble_prolines.rmd](Scripts/PDB/assemble_prolines.rmd) R notebook to pivot `proline_atoms.csv` to a wide format.
 
+</details>
+
 #### 2. Add adjacent groups
+
+<details>
+<summary>Usage</summary>
 
 1. Read the atoms from adjacent residues by executing [get_acetyl.pbs](Scripts/PDB/get_acetyl.pbs), [get_amide.pbs](Scripts/PDB/get_amide.pbs) and [get_methyl.pbs](Scripts/PDB/get_methyl.pbs). [read_acetyl.awk](Scripts/PDB/read_acetyl.awk), [read_amide.awk](Scripts/PDB/read_amide.awk),and [read_methyl.awk](Scripts/PDB/read_methyl.awk) must be in the same directory as their respective pbs scripts. Each directory must also contain the wide-format proline coordinates (`proline_residues.csv`) . Set the path to the PDB directory in each script before executing:
 ```shell
@@ -96,6 +103,8 @@ qsub get_acetyl.pbs
 qsub get_amide.pbs
 qsub get_methyl.pbs
 ```
+</details>
+
 2. Combine atoms from adjacent residues with the wide-format residue records with the [assemble_AcProNMe.rmd](Scripts/PDB/assemble_AcProNMe.rmd) R notebook. This requires the files for the atomic coordinates of the proline residues (`proline_residues.csv`), and the adjacent groups (`acetyl_atoms.csv`, `amide_atoms.csv` and `methyl_atoms.csv`).
 
 #### 3. Convert Cartesian atomic coordinates to internal coordinates
@@ -113,7 +122,7 @@ python csv2internal.py ./AcProNMe.csv ./AcProNMe_internal.config ./PDB.intl
 
 Use [analyse_pdb.rmd](Scripts/PDB/analyse_pdb.rmd) to analyse the distribution of conformations within the PDB sample (`PDB.intl`).
 
-</details>
+
 
 ### ORCA Computational Chemistry Overview
 
