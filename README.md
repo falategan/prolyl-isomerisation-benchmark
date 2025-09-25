@@ -77,7 +77,8 @@ To reproduce this analysis, you will need:
 
 ![Flowchart depicting the data pipeline for the analysis of the prolyl conformational distribution](./Images/PDB_flowchart.png)
 
-#### 1. Prepare proline geometries
+<details>
+<summary>#### 1. Prepare proline geometries</summary>
 
 1. Select your set of proteins and download their `.pdb` crystallographic coordinates to a dedicated directory. 
 2. Write their PDB ids of the proteins into a newline ("\\n") separated text file ([pisces_pdb_ids.txt](<./Data/PDB Conformations/pisces_pdb_ids.txt>)). The files must be named `{ID}.pdb`, where {ID} is its PDB id.
@@ -111,6 +112,8 @@ python csv2internal.py ./AcProNMe.csv ./AcProNMe_internal.config ./PDB.intl
 #### 4. Filter and generate figures of the conformational distribution
 
 Use [analyse_pdb.rmd](Scripts/PDB/analyse_pdb.rmd) to analyse the distribution of conformations within the PDB sample (`PDB.intl`).
+
+</details>
 
 ### ORCA Computational Chemistry Overview
 
