@@ -175,10 +175,10 @@ Optimise the geometry of the approximate local minima (`minima_fwd_scan.940.xyz`
 Generate internal coordinates for the optimised local minima.
 
 ```shell
-python xyz2internal.py minima_fwd_scan.940.xyz AcProNHMe_internal.config transG_g-endo.intl
-python xyz2internal.py minima_fwd_scan.1534.xyz AcProNHMe_internal.config transG_g-exo.intl
-python xyz2internal.py minima_fwd_scan.44007.xyz AcProNHMe_internal.config cisD_g-exo.intl
-python xyz2internal.py minima_fwd_scan.44678.xyz AcProNHMe_internal.config cisA_g-endo.intl
+python xyz2internal.py transG_g-endo.xyz AcProNHMe_internal.config transG_g-endo.intl
+python xyz2internal.py transG_g-exo.xyz AcProNHMe_internal.config transG_g-exo.intl
+python xyz2internal.py cisD_g-exo.xyz AcProNHMe_internal.config cisD_g-exo.intl
+python xyz2internal.py cisA_g-endo.xyz AcProNHMe_internal.config cisA_g-endo.intl
 ```
 
 ##### 6. Characterise local minima
@@ -282,10 +282,17 @@ Use the R notebook [Analyse_Transition_States.rmd](<Scripts/Transition State Sea
 
 ![Flowchart depicting the data pipeline for the benchmark of DFT functionals](./Images/Benchmark_Flowchart.png)
 
-This section uses the minimum energy geometries derived in the [Identification of minimum energy geometries section](#identification-of-minimum-energy-geometries) and the transition state geometries derived in the [Identification of minimum energy geometries Section](#identification-of-minimum-energy-geometries) and the transition states derived in the [Identification of gas-phase transition state geometries section](#identification-of-gas-phase-transition-state-geometries).
+This section uses the minimum energy geometries derived in the [Identification of minimum energy geometries section](#identification-of-minimum-energy-geometries) and the transition state geometries derived in the [Identification of minimum energy geometries section](#identification-of-minimum-energy-geometries) and the transition states derived in the [Identification of gas-phase transition state geometries section](#identification-of-gas-phase-transition-state-geometries).
 
 #### Calculate CCSD(T)/CBS single point energies
 
+```
+./CCSD.sh geometries.config
+```
+
+The configuration file ([geometries.config](<Scripts/Single Point Energies/geometries.config>)) has a single column providing the names of the critical point geometries (`transG_g-endo`/`transG_g-exo`/`cisD_g-exo`/`cisA_g-endo`/`anti-endo`/`anti-exo`/`syn-endo`/`syn-exo`)
+
+The shell script ([CCSD.sh](<Scripts/Single Point Energies/CCSD.sh>)) requires the CCSD(T)/CSB input file ([CCSD.inp](<Scripts/Single Point Energies/CCSD.inp>)), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the critical point geometries ([transG_g-endo.xyz](<Data/Minimum Geometries/transG_g-endo.xyz>)/[transG_g-exo.xyz](<Data/Minimum Geometries/transG_g-exo.xyz>)/[cisD_g-exo.xyz](<Data/Minimum Geometries/cisD_g-exo.xyz>)/[cisA_g-endo.xyz](<Data/Minimum Geometries/cisA_g-endo.xyz>)/[anti-endo.xyz](<Data/Transition States/anti-endo.xyz>)/[syn-endo.xyz](<Data/Transition States/syn-endo.xyz>)/[anti-exo.xyz](<Data/Transition States/anti-exo.xyz>)/[syn-exo.xyz](<Data/Transition States/syn-exo.xyz>)) in the working directory or PATH variables. 
 
 #### Calculate DFT single point energies
 
