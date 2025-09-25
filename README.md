@@ -242,7 +242,7 @@ python xyz2internal.py rf_10748_hi-res_scan.allxyz AcProNHMe_internal.config rf_
 
 ##### 7. Identify new candidate transition states
 
-The R notebook, [Inspect_hi-res_scans.rmd](<Scripts/Relaxed Surface Scans/Inspect_hi-res_scans.rmd>), produces plots from which new candidate saddle points may be selected. The notebook requires the internal coordinates for the refined surface scans ([fr_18441_hi-res_scan.intl](<Data/Transition States/fr_18441_hi-res_scan.intl>)/[rf_10748_hi-res_scan.intl](<Data/Transition States/rf_10748_hi-res_scan.intl>)), and the single point energies of each geometry ([fr_18441_hi-res_scan.relaxscanact.dat](<Data/Transition States/fr_18441_hi-res_scan.relaxscanact.dat>)/[rf_10748_hi-res_scan.relaxscanact.dat](<Data/Transition States/rf_10748_hi-res_scan.relaxscanact.dat>)).
+The R notebook, [Inspect_hi-res_scans.rmd](<Scripts/Relaxed Surface Scans/Inspect_hi-res_scans.rmd>), produces plots from which new candidate saddle points may be selected. The notebook requires the internal coordinates for the refined surface scans ([fr_18441_hi-res_scan.intl](<Data/Transition States/fr_18441_hi-res_scan.intl>) / [rf_10748_hi-res_scan.intl](<Data/Transition States/rf_10748_hi-res_scan.intl>)), and the single point energies of each geometry ([fr_18441_hi-res_scan.relaxscanact.dat](<Data/Transition States/fr_18441_hi-res_scan.relaxscanact.dat>) / [rf_10748_hi-res_scan.relaxscanact.dat](<Data/Transition States/rf_10748_hi-res_scan.relaxscanact.dat>)).
 
 ##### 8. Optimise new candidate transition states
 
@@ -252,9 +252,9 @@ The R notebook, [Inspect_hi-res_scans.rmd](<Scripts/Relaxed Surface Scans/Inspec
 The shell script ([TS_search.sh](<Scripts/Transition State Searches/TS_search.sh>)) requires the transition state search input file ([TS_search_hi-res.inp](<Scripts/Transition State Searches/TS_search_hi-res.inp>)) and the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) in the working directory or PATH variables.
 
 This transition state search requires three optimised geometries along the reaction path: 
-1) a geometry that precedes the transition state on the reaction path ([rf_10748_hi-res_scan.263.xyz](<Data/Transition States/rf_10748_hi-res_scan.263.xyz>)/[fr_18441_hi-res_scan.268.xyz](<Data/Transition States/fr_18441_hi-res_scan.268.xyz>))
-2) a geometry near the expected transition state ([rf_10748_hi-res_scan.284.xyz](<Data/Transition States/rf_10748_hi-res_scan.284.xyz>)/[fr_18441_hi-res_scan.288.xyz](<Data/Transition States/fr_18441_hi-res_scan.288.xyz>))
-3) a geometry the follows the transition state on the path ([rf_10748_hi-res_scan.305.xyz](<Data/Transition States/rf_10748_hi-res_scan.305.xyz>)/[fr_18441_hi-res_scan.308.xyz](<Data/Transition States/fr_18441_hi-res_scan.308.xyz>))
+1) a geometry that precedes the transition state on the reaction path ([rf_10748_hi-res_scan.263.xyz](<Data/Transition States/rf_10748_hi-res_scan.263.xyz>) / [fr_18441_hi-res_scan.268.xyz](<Data/Transition States/fr_18441_hi-res_scan.268.xyz>))
+2) a geometry near the expected transition state ([rf_10748_hi-res_scan.284.xyz](<Data/Transition States/rf_10748_hi-res_scan.284.xyz>) / [fr_18441_hi-res_scan.288.xyz](<Data/Transition States/fr_18441_hi-res_scan.288.xyz>))
+3) a geometry the follows the transition state on the path ([rf_10748_hi-res_scan.305.xyz](<Data/Transition States/rf_10748_hi-res_scan.305.xyz>) / [fr_18441_hi-res_scan.308.xyz](<Data/Transition States/fr_18441_hi-res_scan.308.xyz>))
 
 The configuration file ([TS_search_hi-res.config](<Scripts/Transition State Searches/TS_search_hi-res.config>)) has the following columns:
 
@@ -275,7 +275,7 @@ python xyz2internal.py syn-exo.xyz AcProNHMe_internal.config syn-exo.intl
 
 ##### 10. Characterise transition states
 
-Use the R notebook [Analyse_Transition_States.rmd](<Scripts/Transition State Searches/Analyse_Transition_States.Rmd>) to calculate puckering coordinates and tabulate the properties of the transition state geometries. This notebook requires the internal coordinates of all optimised transition states ([anti-endo.intl](<Data/Transition States/anti-endo.intl>)/[syn-endo.intl](<Data/Transition States/syn-endo.intl>)/[anti-exo.xyz](<Data/Transition States/anti-exo.intl>)/[syn-exo.intl](<Data/Transition States/syn-exo.intl>)) and their ORCA property files ([anti-endo.property.json](<Data/Transition States/anti-endo.property.json>)/[syn-endo.property.json](<Data/Transition States/syn-endo.property.json>)/[anti-exo.property.json](<Data/Transition States/anti-exo.property.json>)/[syn-exo.property.json](<Data/Transition States/syn-exo.property.json>)).
+Use the R notebook [Analyse_Transition_States.rmd](<Scripts/Transition State Searches/Analyse_Transition_States.Rmd>) to calculate puckering coordinates and tabulate the properties of the transition state geometries. This notebook requires the internal coordinates of all optimised transition states ([anti-endo.intl](<Data/Transition States/anti-endo.intl>) / [syn-endo.intl](<Data/Transition States/syn-endo.intl>) / [anti-exo.xyz](<Data/Transition States/anti-exo.intl>) / [syn-exo.intl](<Data/Transition States/syn-exo.intl>)) and their ORCA property files ([anti-endo.property.json](<Data/Transition States/anti-endo.property.json>) / [syn-endo.property.json](<Data/Transition States/syn-endo.property.json>) / [anti-exo.property.json](<Data/Transition States/anti-exo.property.json>) / [syn-exo.property.json](<Data/Transition States/syn-exo.property.json>)).
 
 
 ### Benchmark of DFT functionals
@@ -290,9 +290,9 @@ This section uses the minimum energy geometries derived in the [Identification o
 ./CCSD.sh geometries.config
 ```
 
-The configuration file ([geometries.config](<Scripts/Single Point Energies/geometries.config>)) has a single column providing the names of the critical point geometries (`transG_g-endo`/`transG_g-exo`/`cisD_g-exo`/`cisA_g-endo`/`anti-endo`/`anti-exo`/`syn-endo`/`syn-exo`)
+The configuration file ([geometries.config](<Scripts/Single Point Energies/geometries.config>)) has a single column providing the names of the critical point geometries (`transG_g-endo` / `transG_g-exo` / `cisD_g-exo` / `cisA_g-endo` / `anti-endo` / `anti-exo` / `syn-endo` / `syn-exo`)
 
-The shell script ([CCSD.sh](<Scripts/Single Point Energies/CCSD.sh>)) requires the CCSD(T)/CSB input file ([CCSD.inp](<Scripts/Single Point Energies/CCSD.inp>)), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the critical point geometries ([transG_g-endo.xyz](<Data/Minimum Geometries/transG_g-endo.xyz>)/[transG_g-exo.xyz](<Data/Minimum Geometries/transG_g-exo.xyz>)/[cisD_g-exo.xyz](<Data/Minimum Geometries/cisD_g-exo.xyz>)/[cisA_g-endo.xyz](<Data/Minimum Geometries/cisA_g-endo.xyz>)/[anti-endo.xyz](<Data/Transition States/anti-endo.xyz>)/[syn-endo.xyz](<Data/Transition States/syn-endo.xyz>)/[anti-exo.xyz](<Data/Transition States/anti-exo.xyz>)/[syn-exo.xyz](<Data/Transition States/syn-exo.xyz>)) in the working directory or PATH variables. 
+The shell script ([CCSD.sh](<Scripts/Single Point Energies/CCSD.sh>)) requires the CCSD(T)/CSB input file ([CCSD.inp](<Scripts/Single Point Energies/CCSD.inp>)), the ORCA job template ([orca_template.pbs](Scripts/orca_template.pbs)) and the critical point geometries ([transG_g-endo.xyz](<Data/Minimum Geometries/transG_g-endo.xyz>) / [transG_g-exo.xyz](<Data/Minimum Geometries/transG_g-exo.xyz>) / [cisD_g-exo.xyz](<Data/Minimum Geometries/cisD_g-exo.xyz>) / [cisA_g-endo.xyz](<Data/Minimum Geometries/cisA_g-endo.xyz>) / [anti-endo.xyz](<Data/Transition States/anti-endo.xyz>) / [syn-endo.xyz](<Data/Transition States/syn-endo.xyz>) / [anti-exo.xyz](<Data/Transition States/anti-exo.xyz>) / [syn-exo.xyz](<Data/Transition States/syn-exo.xyz>)) in the working directory or PATH variables. 
 
 #### Calculate DFT single point energies
 
