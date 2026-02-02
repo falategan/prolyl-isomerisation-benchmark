@@ -164,7 +164,7 @@ This section makes use of the initial optimised geometry generate in the [Prepar
 <details>
 <summary>Details</summary>
 
-Run the [xtb_2D_scan.sh](<Scripts/Relaxed Surface Scans/xtb_2D_scan.sh>) script, starting at the optimised starting geometry ([AcProNHMe_opt.xyz](<Data/Structure Preparation/AcProNHMe_opt.xyz>).
+Run the [xtb_2D_scan.sh](<Scripts/Relaxed Surface Scans/xtb_2D_scan.sh>) script, starting at the optimised starting geometry ([AcProNHMe_opt.xyz](<Data/Structure Preparation/AcProNHMe_opt.xyz>)).
 
 ```shell
 ./xtb_2D_scan.sh solvent_scans.config
@@ -186,7 +186,7 @@ The scan coordinates specify the scanning dimension, starting coordinate, end co
 
 Use [xyz2internal.py](<Scripts/Internal Coordinates/xyz2internal.py>) to generate internal coordinates for each scan. The script takes three arguments: 
 1) the path to the atomic coordinates (`xtb_H2O_scan.allxyz` / `xtb_CHCl3_scan.allxyz` / `xtb_DMF_scan.allxyz` / `xtb_gas_scan.allxyz`),
-2) the path to the internal coordinate configuration file ([AcProNHMe_internal.config](<Scripts/Internal Coordinates/AcProNHMe_internal.config>)
+2) the path to the internal coordinate configuration file ([AcProNHMe_internal.config](<Scripts/Internal Coordinates/AcProNHMe_internal.config>))
 3) the output path (`xtb_H2O_scan.intl`/`xtb_CHCl3_scan.intl`/`xtb_DMF_scan.intl`/`xtb_gas_scan.intl`).
 
 ```shell
@@ -206,7 +206,7 @@ Use the [Analyse_solvent_scans.rmd](<Scripts/Relaxed Surface Scans/Analyse_solve
 
 ### Explore gas-phase reaction paths
 
-This section makes use of the initial optimised geometry generate in the [Preparation of the starting geometry Section](#preparation-of-the-starting-geometry).
+This section makes use of the initial optimised geometry generated in the [Preparation of the starting geometry Section](#preparation-of-the-starting-geometry).
 
 ####  Identification of minimum energy geometries
 
